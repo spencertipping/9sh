@@ -1,4 +1,6 @@
 # 9sh
+**Under active development; nothing works yet**
+
 A distributed UNIX shell incorporating design elements from Plan 9, Tcl, Haskell, SQL, Self, Slack, and Emacs. A quick summary:
 
 + POSIX shell constructs generally work, warts and all -- bash constructs less so
@@ -25,7 +27,7 @@ cat //input/* | grep foo | sort | uniq -c > //output/*
       parsed  (parser:parse line)                ; typed ASTs
       linked  (grep #(not= $ nil)
                     (map #($:link) parsed))      ; unify types
-      ;; TODO: choose best of the linked alternatives
+      ;; TODO: choose "best" of the linked alternatives
       opt     (linked:optimize)]                 ; optimize DoFs
   (opt:execute))                                 ; execute the plan
 ```
@@ -60,7 +62,7 @@ Mechanically:
 + `zstd             :: Stream s            => s x -> s (Zstd x)`
 + `> foo.csv.zst    :: Stream s, CsvHint f => s (Zstd f) -> IO ()`
 
-`db/table` is a VFS entry containing database connection metadata, including the table name. DB tables are often both streamable and listable, meaning that they
+`db/table` is a VFS entry containing database connection metadata, including the table name. DB tables are often both streamable and listable, meaning that they act as files and directories simultaneously: `cat table` and `cd table` both work.
 
 The `DB` type creates a SQL context that can be unified across those commands to fuse them into a single query. `DB d t -> Pipe CSV` is a well-defined implicit conversion, which `CsvHint f` suggests with high affinity. Since `Zstd` carries this information across the type boundary, it's unified leftwards to the DB export step.
 
@@ -131,14 +133,16 @@ By convention, `///` is used to inspect objects. `less ///help` will tell you ab
 
 + 9sh will never reject a POSIX shell command, regardless of type
   + Specifically, 9sh types are not used for verification
-+ 9sh types are erased at exec-time; their only purpose is to choose alternatives
++ 9sh types are erased at exec-time; their only purpose is to choose alternatives and propagate configuration
 + VFS entries can provide type information
 + Types can and often should be ambiguous; if they are, 9sh will use statistical optimization to disambiguate
   + Every degree of freedom is a degree of optimization
 
+**TODO:** refine this taxonomy
+
 `Pipe` is a simple FIFO stream on the local system, but 9sh comes with types that describe data locality, sharding, partitioning, and other traits useful for map/reduce operations. This is what enables `cat foo/*` to carry information about file partitioning. If `foo` is a VFS union of remote files, we'll want to move `grep` to the data rather than streaming it all across the network -- therefore, `foo/* :: RemoteFiles ...`. `RemoteFiles` satisfies `Stream`, but it also satisfies `Sharded` and `Remote` which provide enough information to move `grep` to the data.
 
-`Sharded` is the mechanism by which `cat input/* | ... > output/*` can maintain partition boundaries and parallelize the work. This behavior is activated by `> output/*`; although POSIX `sh` does support `> *` as syntax (meaning, create a file called `*` and direct stdout to it), 9sh hijacks that case to mean "write to partitions" and modifies the stream type to a sharded consumer rather than a unified stream.
+`Sharded` is the mechanism by which `cat input/* | ... > output/*` can maintain partition boundaries and parallelize the work. This behavior is activated by `> output/*`; although POSIX `sh` does support `> *` as syntax (meaning, create a file called `*` and direct stdout to it), 9sh hijacks that case to mean "write to partitions" and modifies the stream type to a sharded consumer rather than a serialized stream. This propagation happens automatically when the types are unified.
 
 ``` sh
 cat foo | grep bar | sort | uniq -c > bif
@@ -189,6 +193,11 @@ As in bash, background jobs are stopped if they attempt to change the terminal m
 
 ### On-demand processes
 Background jobs aren't always UNIX processes. You can define a `@`-name as a Fennel object that operates over stored state in some way rather than persistently occupying a process entry.
+
+
+## Contributors
++ [Spencer Tipping](https://github.com/spencertipping)
++ [tvScientific](https://tvscientific.com)
 
 
 ## License
