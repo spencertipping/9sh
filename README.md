@@ -22,15 +22,15 @@ cat //input/* | grep foo | sort | uniq -c > //output/*
 9sh processes the above line like this:
 
 ``` fennel
-(let [command (PWD:command (line:match "^%S+"))  ; ask VFS PWD to resolve command
-      parser  (command:parser PWD)               ; construct parser
-      parsed  (parser:parse line)                ; typed ASTs
+(let [command (PWD:command line)             ; ask VFS PWD to resolve command
+      parser  (command:parser PWD)           ; construct parser
+      parsed  (parser:parse line)            ; typed ASTs
       linked  (grep #(not= $ nil)
-                    (map #($:link) parsed))      ; unify types
+                    (map #($:link) parsed))  ; unify types
       ;; TODO: choose "best" of the linked alternatives
       ;; (how is best defined? do we optimize across all?)
-      opt     (linked:optimize)]                 ; optimize DoFs
-  (opt:execute))                                 ; execute the plan
+      opt     (linked:optimize)]             ; optimize DoFs
+  (opt:execute))                             ; execute the plan
 ```
 
 When running interactively, the parse and link phases happen on every modification to the input line. `(command:parser)` is an arbitrary combinatory parser that provides syntax highlighting and autocompletion hints as the user is typing. Note that it doesn't block on the VFS or RPC; remote resources may arrive later to provide refined type options. However, command execution _does_ block on RPC because the executed outcome must be consistent.
@@ -77,7 +77,9 @@ It may seem problematic that type unification and the grammar can interact. In p
 
 
 ### VFS parse delegation
-You can think of bash as using a monomorphic parsing strategy: the line is first split on words, then the command is resolved according to `$PATH` (or to a special form like `if`) and args are passed in as an array via `exec()`, or using the bulitin syntax.
+You can think of bash as using a monomorphic parsing strategy: the line is first split on words, then the command is resolved according to `$PATH` (or to a special form like `if`) and args are passed in as an array via `exec()`, or using the bulitin syntax. Expansions like `~` and `<(foo)` are independent of where they're used within a command, and in which environment the command was written.
+
+9sh offers two degrees of polymorphism driven by the PWD. First, as outlined in the parse → execution pipeline above, the VFS resolves the command. If your PWD is of a different class instance, its resolution logic may differ as well -- both from a parsing and overloading perspective. Second, commands construct their grammars by calling _back_ into the VFS for common elements like filenames, short-args, quoted strings, and so forth. The VFS provides parsers for these common elements, and some VFS instances may customize them. This allows a VFS entry to act as a fully-native REPL for an environment.
 
 
 ## VFS
