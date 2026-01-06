@@ -1,6 +1,7 @@
 FROM alpine:3.19
 
 RUN apk add --no-cache \
+    bash \
     build-base \
     cmake \
     git \
@@ -28,7 +29,8 @@ RUN apk add --no-cache \
 
 # Install Fennel
 RUN curl -L https://fennel-lang.org/downloads/fennel-1.4.0 -o /usr/bin/fennel && \
-    chmod +x /usr/bin/fennel
+    chmod +x /usr/bin/fennel && \
+    ln -s /usr/bin/luajit /usr/bin/lua
 
 # Build libvterm
 RUN git clone https://github.com/neovim/libvterm.git /tmp/libvterm && \
@@ -41,19 +43,23 @@ RUN git clone https://github.com/neovim/libvterm.git /tmp/libvterm && \
 # Actually, let's try to build libnice from source to be sure we get a static lib.
 RUN git clone https://gitlab.freedesktop.org/libnice/libnice.git /tmp/libnice && \
     cd /tmp/libnice && \
-    meson setup build -Ddefault_library=static -Dexamples=disabled -Dtests=disabled && \
+    meson setup build -Ddefault_library=static -Dexamples=disabled -Dtests=disabled --prefix=/usr/local && \
     ninja -C build install && \
     rm -rf /tmp/libnice
 
 # Build libdatachannel
+ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/lib64/pkgconfig:/usr/lib/pkgconfig
 RUN git clone --recursive https://github.com/paullouisageneau/libdatachannel.git /tmp/libdatachannel && \
     cd /tmp/libdatachannel && \
     cmake -B build -G Ninja \
-        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_BUILD_TYPE=MinSizeRel \
         -DBUILD_SHARED_LIBS=OFF \
         -DUSE_NICE=ON \
         -DNO_WEBSOCKET=OFF \
-        -DNO_MEDIA=ON && \
+        -DNO_MEDIA=ON \
+        -DNO_EXAMPLES=ON \
+        -DNO_TESTS=ON \
+        -DCMAKE_PREFIX_PATH=/usr/local && \
     cmake --build build --target install && \
     rm -rf /tmp/libdatachannel
 

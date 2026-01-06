@@ -28,6 +28,7 @@ cat //input/* | grep foo | sort | uniq -c > //output/*
       linked  (grep #(not= $ nil)
                     (map #($:link) parsed))      ; unify types
       ;; TODO: choose "best" of the linked alternatives
+      ;; (how is best defined? do we optimize across all?)
       opt     (linked:optimize)]                 ; optimize DoFs
   (opt:execute))                                 ; execute the plan
 ```
@@ -55,12 +56,16 @@ cat db/table | grep x > 100 | sel foo bar | sort-by foo:desc | zstd > foo.csv.zs
 
 Mechanically:
 
-+ `cat db/table     ::                        DB (db-type db) (Table table)`
-+ `grep x > 100     :: Has t 'x            => DB d t -> DB d t`
-+ `sel foo bar      ::                        DB d t -> DB d (foo t, bar t)`
-+ `sort-by foo:desc :: Has t 'foo          => DB d t -> DB d t`
-+ `zstd             :: Stream s            => s x -> s (Zstd x)`
-+ `> foo.csv.zst    :: Stream s, CsvHint f => s (Zstd f) -> IO ()`
+```
+cat db/table     ::                        DB (db-type db) (Table table)
+grep x > 100     :: Has t 'x            => DB d t -> DB d t
+sel foo bar      ::                        DB d t -> DB d (foo t, bar t)
+sort-by foo:desc :: Has t 'foo          => DB d t -> DB d t
+zstd             :: Stream s            => s x -> s (Zstd x)
+> foo.csv.zst    :: Stream s, CsvHint f => s (Zstd f) -> IO ()
+```
+
+**TODO:** fix types above; they're the right idea but are not literally correct. Also, let's get into how alternatives interact with the type system.
 
 `db/table` is a VFS entry containing database connection metadata, including the table name. DB tables are often both streamable and listable, meaning that they act as files and directories simultaneously: `cat table` and `cd table` both work.
 
@@ -68,7 +73,11 @@ The `DB` type creates a SQL context that can be unified across those commands to
 
 `grep x > 100 | ...` is valid POSIX syntax, but POSIX `grep` can't be unified to the `DB` type. As a result we choose the `DB` alternative of `grep`, whose grammar interprets `>` as part of a SQL expression rather than as a file redirection operator.
 
-It may seem problematic that type unification and the grammar can interact. In practice it's not such an issue: although we parse every alternative for a command, we memoize the parse by starting position such that common suffixes will be cached. This means that as long as a command doesn't cannibalize `|` itself, it just creates a local alternative and doesn't fork the whole parse continuation. (However, when you're writing your own commands and alternatives you'll want to keep this in mind to avoid performance issues.)
+It may seem problematic that type unification and the grammar can interact. In practice it's not such an issue: although we parse every alternative for a command, we memoize the parse by starting position such that common suffixes will be cached. This means that as long as a command doesn't cannibalize `|` itself, it just creates a local alternative and doesn't fork the whole parse continuation.
+
+
+### VFS parse delegation
+**TODO**
 
 
 ## VFS
@@ -79,6 +88,16 @@ The VFS, an object-oriented superstructure over the UNIX filesystem, is modeled 
 + `foo///bar` uses the third moment (uncommon; this is usually for metadata)
 
 Note that 9sh's VFS is not visible to UNIX processes. If you write `cat //vfs/file`, POSIX `cat` won't run; instead, a stream will be made from the virtual file contents. This approach is made consistent with stream types, covered below. Remote data is handled by either moving a process to the remote system (if possible), or by FIFO-streaming the data to the local one.
+
+
+### Higher-moment roots
+Only the first moment has a true root directory: `//` == `.//`, `///` == `.///`, and so on. The second moment of the UNIX root is written as `/.//`, but you will rarely if ever need to use it.
+
+We do this to provide _root polymorphism for higher moments:_ functionally, `//` is both the root of the second-order VFS filesystem and it's contextually dependent on the directory you used to access it. That is, `cd foo` is allowed to add entries to the `//` tree. In order to make this consistent, we model that specific `//` tree as being local to the PWD used to access it. Same for `///`, which is more explicitly localized.
+
+Conventionally, `/` is used for _concrete files,_ `//` for _synthetic shortcuts,_ and `///` to access configuration. 9sh supports arbitrarily high moments, but only the first three have behavior defined by the standard library.
+
+`///` is used to inspect objects. `less ///help` will tell you about the capabilities of the current directory, for example. `///help` is defined for every VFS object, as are `///source`, `///methods`, and other meta-files. `///` also tells you about parser overloads, inheritance, and commands.
 
 
 ### VFS traits
@@ -118,16 +137,6 @@ Some traits are about behavior rather than file properties. This is how the VFS 
 Note that these traits are unrelated to the types used to unify command alternatives -- the bridge is the `types` method of `VFS.Entry`, which provides a list of potential refined types for a given VFS node. A name might have multiple types because something like `foo/*` is a wildcard (expandable to a list of files), which we can see as a sequenced stream of filenames or as a sharded collection. Similarly, `cat foo.gz` might be a `(GZip Byte)` or just `Byte`. Absent performance optimization, we prefer the resolution with the greatest amount of type information.
 
 
-### Higher-moment roots
-Only the first moment has a true root directory: `//` == `.//`, `///` == `.///`, and so on. The second moment of the UNIX root is written as `/.//`.
-
-It works this way because it's common to want a second-moment file from where you are now, whereas it's uncommon to access higher moments of the root directory. 9sh is a heavily PWD-oriented shell: the PWD is a VFS object that handles all local name resolution, including for commands. Having `//` be a PWD delegation is consistent with that philosophy even though it looks like a root directory of some kind.
-
-
-### `///` for metadata
-By convention, `///` is used to inspect objects. `less ///help` will tell you about the capabilities of the current directory, for example. `///help` is defined for every VFS object, as are `///source`, `///methods`, and other meta-files.
-
-
 ## Stream typing
 9sh types have several properties:
 
@@ -138,7 +147,7 @@ By convention, `///` is used to inspect objects. `less ///help` will tell you ab
 + Types can and often should be ambiguous; if they are, 9sh will use statistical optimization to disambiguate
   + Every degree of freedom is a degree of optimization
 
-**TODO:** refine this taxonomy
+**TODO:** refine this taxonomy; the idea is right but the proposed implementation is not
 
 `Pipe` is a simple FIFO stream on the local system, but 9sh comes with types that describe data locality, sharding, partitioning, and other traits useful for map/reduce operations. This is what enables `cat foo/*` to carry information about file partitioning. If `foo` is a VFS union of remote files, we'll want to move `grep` to the data rather than streaming it all across the network -- therefore, `foo/* :: RemoteFiles ...`. `RemoteFiles` satisfies `Stream`, but it also satisfies `Sharded` and `Remote` which provide enough information to move `grep` to the data.
 
@@ -164,6 +173,8 @@ cat //input/* | grep foo | sort > //output/*
 9sh is a distributed shell. Objects can be addressed remotely using a flatbuffer RPC tunneled over any full-duplex channel, e.g. SSH stdio, a UNIX socket, or a secure P2P network connection provided by `libdatachannel`. This mechanism enables remote VFS operations, which makes it possible to `cd` into a remote host and list its files as though they were local.
 
 9sh connects local instances by default using the `~/.9sh.sock` domain socket. State is centralized per user to avoid race conditions and conflicts.
+
+**TODO:** a lot more about this
 
 
 ## Async processes and interaction
