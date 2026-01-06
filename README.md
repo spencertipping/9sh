@@ -73,10 +73,12 @@ The `DB` type creates a SQL context that can be unified across those commands to
 
 `grep x > 100 | ...` is valid POSIX syntax, but POSIX `grep` can't be unified to the `DB` type. As a result we choose the `DB` alternative of `grep`, whose grammar interprets `>` as part of a SQL expression rather than as a file redirection operator.
 
-It may seem problematic that type unification and the grammar can interact. In practice it's not such an issue: although we parse every alternative for a command, we memoize the parse by starting position such that common suffixes will be cached. This means that as long as a command doesn't cannibalize `|` itself, it just creates a local alternative and doesn't fork the whole parse continuation.
+It may seem problematic that type unification and the grammar can interact. In practice it's not such an issue: although we parse every alternative for a command, we memoize the parse by starting position such that common suffixes will be cached. This means that as long as a command doesn't cannibalize `|` itself, it just creates a local alternative and doesn't fork the whole parse continuation. (Commands can also create bigger forks by consuming `|`; the only downside is performance.)
 
 
 ### VFS parse delegation
+You can think of bash as using a monomorphic parsing strategy: the line is first split on words, then the command is resolved according to `$PATH` (or to a special form like `if`) and args are passed in as an array via `exec()`, or using the bulitin syntax. Forms like `<(grep foo bar)` are transformed into `/dev/fd/x` monomorphically as well.
+
 **TODO**
 
 
