@@ -79,7 +79,7 @@ It may seem problematic that type unification and the grammar can interact. In p
 ### VFS parse delegation
 You can think of bash as using a monomorphic parsing strategy: the line is first split on words, then the command is resolved according to `$PATH` (or to a special form like `if`) and args are passed in as an array via `exec()`, or using the bulitin syntax. Expansions like `~` and `<(foo)` are independent of where they're used within a command, and in which environment the command was written.
 
-9sh offers two degrees of polymorphism driven by the PWD. First, as outlined in the parse → execution pipeline above, the VFS resolves the command. If your PWD is of a different class instance, its resolution logic may differ as well -- both from a parsing and overloading perspective. Second, commands construct their grammars by calling _back_ into the VFS for common elements like filenames, short-args, quoted strings, and so forth. The VFS provides parsers for these common elements, and some VFS instances may customize them. This allows a VFS entry to act as a fully-native REPL for an environment.
+9sh offers two degrees of polymorphism driven by the PWD. First, as outlined in the parse → execution pipeline above, the VFS resolves the command. If your PWD is of a different class instance, its resolution logic may differ as well -- both from a parsing and overloading perspective. Second, commands construct their grammars by calling _back_ into the VFS for common elements like filenames, short-args, quoted strings, and so forth. The VFS provides parsers for these common elements, and some VFS instances may customize them. This allows a VFS entry to act as a fully-native REPL for an environment in theory, although in practice you probably don't want this very often.
 
 
 ## VFS
@@ -93,13 +93,13 @@ Note that 9sh's VFS is not visible to UNIX processes. If you write `cat //vfs/fi
 
 
 ### Higher-moment roots
-Only the first moment has a true root directory: `//` == `.//`, `///` == `.///`, and so on. The second moment of the UNIX root is written as `/.//`, but you will rarely if ever need to use it.
+Only the first moment has a true root directory; others are relative to PWD: `//` == `.//`, `///` == `.///`, and so on. The second moment of the UNIX root is written as `/.//`, but you will rarely if ever want to use it.
 
 We do this to provide _root polymorphism for higher moments:_ functionally, `//` is both the root of the second-order VFS filesystem and it's contextually dependent on the directory you used to access it. That is, `cd foo` is allowed to add entries to the `//` tree. In order to make this consistent, we model that specific `//` tree as being local to the PWD used to access it. Same for `///`, which is more explicitly localized.
 
-Conventionally, `/` is used for _concrete files,_ `//` for _synthetic shortcuts,_ and `///` to access configuration. 9sh supports arbitrarily high moments, but only the first three have behavior defined by the standard library.
+Conventionally, `/` is used for _concrete files,_ `//` for _synthetic shortcuts,_ and `///` to access configuration. 9sh supports arbitrarily high moments, but only the first three have behavior defined by the standard library. Also by convention, `//` inherits entries from parents whereas `/` and `///` do not; that is, the second moment accumulates shorthands you can navigate to for quick access to resources.
 
-`///` is used to inspect objects. `less ///help` will tell you about the capabilities of the current directory, for example. `///help` is defined for every VFS object, as are `///source`, `///methods`, and other meta-files. `///` also tells you about parser overloads, inheritance, and commands.
+`///` is used to inspect objects. `less ///help` will tell you about the capabilities of the current directory, for example. `///help` is defined for every VFS object, as are `///source`, `///methods`, and other meta-files. `///` also tells you about parser overloads, inheritance, and commands: `///command/cd/parsers/root` is the root parser for the `cd` command resolved by the current directory. You can pipe input into that parser to see the resulting state, for example.
 
 
 ### VFS traits
@@ -133,10 +133,13 @@ Some traits are about behavior rather than file properties. This is how the VFS 
   (host))
 
 (deftrait VFS.Entry       ; a named point in the VFS
+  (parent)                ; link to another VFS entry
   (types))                ; a list of {:type :entry} objects
 ```
 
 Note that these traits are unrelated to the types used to unify command alternatives -- the bridge is the `types` method of `VFS.Entry`, which provides a list of potential refined types for a given VFS node. A name might have multiple types because something like `foo/*` is a wildcard (expandable to a list of files), which we can see as a sequenced stream of filenames or as a sharded collection. Similarly, `cat foo.gz` might be a `(GZip Byte)` or just `Byte`. Absent performance optimization, we prefer the resolution with the greatest amount of type information.
+
+**FIXME:** this optimization vs ambiguity heuristic is flawed
 
 
 ## Stream typing
