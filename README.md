@@ -77,9 +77,7 @@ It may seem problematic that type unification and the grammar can interact. In p
 
 
 ### VFS parse delegation
-You can think of bash as using a monomorphic parsing strategy: the line is first split on words, then the command is resolved according to `$PATH` (or to a special form like `if`) and args are passed in as an array via `exec()`, or using the bulitin syntax. Forms like `<(grep foo bar)` are transformed into `/dev/fd/x` monomorphically as well.
-
-**TODO**
+You can think of bash as using a monomorphic parsing strategy: the line is first split on words, then the command is resolved according to `$PATH` (or to a special form like `if`) and args are passed in as an array via `exec()`, or using the bulitin syntax.
 
 
 ## VFS

@@ -53,6 +53,7 @@ You must write code like a crazy person who is obsessive, perfectionistic, and e
 *   **Docstrings:** Use standard `//` syntax (do not use Haskell-style `|` pipes).
 +   **Structs:** Always use `struct` instead of `class`. Always use `protected` and not `private`. Instance state is always declared at the end of a struct. Structs should be `final` unless defined as bases.
 +   **Templates:** Always use `class` instead of `typename`. Use custom aliases: `Tn = template<>`, `Tt = template<class T>`, etc.
++   **Includes:** Always include system libraries before internal dependencies, before dialect headers (e.g. ones that export specific aliases).
 
 **Haskell:**
 *   **Pragmas:** List language extensions vertically at the top.
