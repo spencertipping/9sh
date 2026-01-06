@@ -1,4 +1,4 @@
-(local fp (require :src.core.fp))
+(local fp (require :core.fp))
 (print "--- Testing FP ---")
 
 ;; Map

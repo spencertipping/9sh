@@ -1,8 +1,8 @@
 ;; 9sh Statistics Library
 ;; Depends on src/core/oop.fnl
-(import-macros {: deftrait : defclass : impl} :src.core.macros)
+(import-macros {: deftrait : defclass : impl} :core.macros)
 
-(local oop   (require :src.core.oop))
+(local oop   (require :core.oop))
 (local stats {})
 
 ;; --- Traits ---
@@ -21,6 +21,7 @@
 ;; --- PRNG ---
 
 (defclass PRNG [:seed] "Wrapper for math.random")
+
 
 (impl PRNG Sampler
   (next-float    [s] (math.random))

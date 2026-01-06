@@ -9,6 +9,8 @@ docker build -t 9sh-builder .
 
 echo "Running tests in container..."
 docker run --rm -v $(pwd):/work 9sh-builder bash -c "
+  export FENNEL_PATH='/work/src/?.fnl;/work/src/?/init.fnl'
+  export FENNEL_MACRO_PATH='/work/src/?.fnl;/work/src/?/init.fnl'
   echo 'Running tests/core/fp.fnl...' && fennel tests/core/fp.fnl && \
   echo 'Running tests/core/stats.fnl...' && fennel tests/core/stats.fnl && \
   echo 'Running tests/core/oop_operators.fnl...' && fennel tests/core/oop_operators.fnl

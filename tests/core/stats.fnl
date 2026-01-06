@@ -1,6 +1,6 @@
-(import-macros {: deftrait : defclass : impl} :src.core.macros)
-(local oop   (require :src.core.oop))
-(local stats (require :src.core.stats))
+(import-macros {: deftrait : defclass : impl} :core.macros)
+(local oop   (require :core.oop))
+(local stats (require :core.stats))
 
 (print "--- OOP Macros ---")
 (defclass Person [:name :age] "Person class")

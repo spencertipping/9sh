@@ -1,5 +1,5 @@
-(import-macros {: deftrait : defclass : impl} :src.core.macros)
-(local oop (require :src.core.oop))
+(import-macros {: deftrait : defclass : impl} :core.macros)
+(local oop (require :core.oop))
 (local bit (require :bit))
 
 (print "--- OOP Operator Tests ---")

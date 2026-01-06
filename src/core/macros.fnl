@@ -1,7 +1,7 @@
 ;; Macros for 9sh OOP System
 ;; Dense, aligned, tabular style.
 
-(local fp (require :src.core.fp))
+(local fp (require :core.fp))
 
 
 (fn deftrait [name doc ...]
@@ -12,13 +12,13 @@
             ma (fp.map tostring (. m 2))
             md (. m 3)]
         (tset mthd mn {:args ma :doc md})))
-    `(let [o# (require :src.core.oop)]
+    `(let [o# (require :core.oop)]
        (o#.deftrait ,name-s ,mthd ,doc))))
 
 
 (fn defclass [name flds doc]
   (let [name-s (tostring name)]
-    `(let [o# (require :src.core.oop)]
+    `(let [o# (require :core.oop)]
        (o#.defclass ,name-s ,flds ,doc))))
 
 
@@ -31,7 +31,7 @@
         (tset impls n `(fn ,a ,(unpack b)))))
 
     ;; Stringify the bare symbols for lookup
-    `(let [o# (require :src.core.oop)
+    `(let [o# (require :core.oop)
            c-name# ,(tostring cls)
            t-name# ,(tostring trt)
            c# (o#.class c-name#)
