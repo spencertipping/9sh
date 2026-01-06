@@ -1,8 +1,8 @@
 9sh
-src/*.o
-src/*.bc
-src/*.lua
-src/*_bc.h
-src/*_bc.cc
+src/**/*.o
+src/**/*.bc
+src/**/*.lua
+src/**/*_bc.h
+src/**/*_bc.cc
 !src/fennel.lua
 !src/*.fnl

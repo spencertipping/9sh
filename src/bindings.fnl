@@ -37,6 +37,7 @@
   void w_asio_context_run(void* ctx);
   void w_asio_context_delete(void* ctx);
   void* w_asio_timer_new(void* ctx);
+  int w_is_slow_mount(const char* path);
 ")
 
 
@@ -67,4 +68,5 @@
  :asio {:context_new (cast "void* (*)(void)" "asio_context_new")
         :context_run (cast "void (*)(void*)" "asio_context_run")
         :context_delete (cast "void (*)(void*)" "asio_context_delete")
-        :timer_new (cast "void* (*)(void*)" "asio_timer_new")}}
+        :timer_new (cast "void* (*)(void*)" "asio_timer_new")}
+ :is_slow_mount (cast "int (*)(const char*)" "is_slow_mount")}

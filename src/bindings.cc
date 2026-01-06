@@ -2,46 +2,23 @@
 #include <luajit-2.1/lua.hpp>
 #include <readline/history.h>
 #include <readline/readline.h>
+#include <sys/vfs.h>
+#include <linux/magic.h>
 #include <sqlite3.h>
 #include <vterm.h>
 
 #include "base.h"
 
 
-struct C_IOContext
-{
-  boost::asio::io_context* ctx;
-};
+extern "C" {
+  // Asio
+  void* w_asio_context_new();
+  void  w_asio_context_run(void* ctx);
+  void  w_asio_context_delete(void* ctx);
+  void* w_asio_timer_new(void* ctx);
 
-
-// Re-implement C wrappers for Asio to export pointers
-extern "C"
-{
-
-void*
-w_asio_context_new()
-{
-  return new boost::asio::io_context();
-}
-
-void
-w_asio_context_run(void* ctx)
-{
-  static_cast<boost::asio::io_context*>(ctx)->run();
-}
-
-void
-w_asio_context_delete(void* ctx)
-{
-  delete static_cast<boost::asio::io_context*>(ctx);
-}
-
-void*
-w_asio_timer_new(void* ctx)
-{
-  return new boost::asio::steady_timer(*static_cast<boost::asio::io_context*>(ctx));
-}
-
+  // Filesystem
+  int   w_is_slow_mount(const char* path);
 }
 
 
@@ -89,7 +66,11 @@ int luaopen_bindings_native_full(lua_State* L)
   REG_PTR("asio_context_new",       w_asio_context_new);
   REG_PTR("asio_context_run",       w_asio_context_run);
   REG_PTR("asio_context_delete",    w_asio_context_delete);
+
   REG_PTR("asio_timer_new",         w_asio_timer_new);
+
+  // Filesystem
+  REG_PTR("is_slow_mount",          w_is_slow_mount);
 
   return 1;
 }
