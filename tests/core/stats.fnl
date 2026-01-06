@@ -14,6 +14,9 @@
 (local g2 (stats.Gaussian.new 10 2))
 
 (print "G1: mu=" (g1:mean) " var=" (g1:variance))
+(local g3 (+ g1 g2))
+(print "G3 (G1+G2): mu=" (g3:mean) " var=" (g3:variance))
+(assert (= (g3:mean) (+ (g1:mean) (g2:mean))))
 
 (print "--- Testing Introspection ---")
 (print "Doc for Distribution.mean:" (oop.doc oop.registry.traits.Distribution :mean))

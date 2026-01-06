@@ -19,11 +19,20 @@
     `(let [o# (require :src.core.oop)]
        (o#.defclass ,name-s ,flds ,doc))))
 
-(fn impl [cls trt meths]
-  `(let [o# (require :src.core.oop)
-         c# (if (= (type ,cls) "string") (o#.class ,cls) ,cls)
-         t# (if (= (type ,trt) "string") (o#.trait ,trt) ,trt)]
-     (o#.impl c# t# ,meths)))
+(fn impl [cls trt ...]
+  (let [method-impls {}]
+    (each [_ m (ipairs [...])]
+      (let [name (tostring (. m 1))
+            args (. m 2)
+            ;; The body is the rest of the list after args
+            ;; slice is 3 to end
+            body [(unpack m 3)]]
+        (tset method-impls name `(fn ,args ,(unpack body)))))
+
+    `(let [o# (require :src.core.oop)
+           c# (if (= (type ,cls) "string") (o#.class ,cls) ,cls)
+           t# (if (= (type ,trt) "string") (o#.trait ,trt) ,trt)]
+       (o#.impl c# t# ,method-impls))))
 
 {:deftrait deftrait
  :defclass defclass

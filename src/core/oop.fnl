@@ -81,6 +81,15 @@
 (fn Class.overload-le       [self f] (tset self :__le       f))
 (fn Class.overload-tostring [self f] (tset self :__tostring f))
 
+;; Bitwise & Integer Ops (Lua 5.3+ / LuaJIT 2.1+)
+(fn Class.overload-band    [self f] (tset self :__band     f))
+(fn Class.overload-bor     [self f] (tset self :__bor      f))
+(fn Class.overload-bxor    [self f] (tset self :__bxor     f))
+(fn Class.overload-bnot    [self f] (tset self :__bnot     f))
+(fn Class.overload-shl     [self f] (tset self :__shl      f))
+(fn Class.overload-shr     [self f] (tset self :__shr      f))
+(fn Class.overload-idiv    [self f] (tset self :__idiv     f))
+
 (fn oop.defclass [name fields & doc]
   "Define a new class."
   (let [cls {:name name
@@ -136,8 +145,30 @@
   ;; Copy methods to class
   (each [m-name impl-fn (pairs methods)]
     (tset cls m-name impl-fn)
-    ;; Store method metadata if we want (TODO: function metadata?)
-    )
+
+    ;; Check for operator overloading aliases
+    (let [op-map {"operator+"         :__add
+                  "operator-"         :__sub
+                  "operator*"         :__mul
+                  "operator/"         :__div
+                  "operator%"         :__mod
+                  "operator^"         :__pow
+                  "operator-concat"   :__concat
+                  "operator-len"      :__len
+                  "operator-eq"       :__eq
+                  "operator-lt"       :__lt
+                  "operator-le"       :__le
+                  "operator-tostring" :__tostring
+                  "operator-band"     :__band
+                  "operator-bor"      :__bor
+                  "operator-bxor"     :__bxor
+                  "operator-bnot"     :__bnot
+                  "operator-shl"      :__shl
+                  "operator-shr"      :__shr
+                  "operator-idiv"     :__idiv}
+          metamethod (. op-map m-name)]
+      (if metamethod
+          (tset cls metamethod impl-fn))))
 
   (tset cls.traits    trait.name true)
   (tset trait.classes cls.name   cls))
