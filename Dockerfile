@@ -14,7 +14,6 @@ RUN apk add --no-cache \
     readline-static \
     sqlite-dev \
     sqlite-static \
-    luajit-dev \
     boost-dev \
     boost-static \
     curl \
@@ -26,6 +25,14 @@ RUN apk add --no-cache \
     meson \
     ncurses-static \
     pkgconf
+
+# Build LuaJIT with 5.2 compatibility (for # operator on tables)
+RUN git clone https://github.com/LuaJIT/LuaJIT.git /tmp/luajit && \
+    cd /tmp/luajit && \
+    make XCFLAGS=-DLUAJIT_ENABLE_LUA52COMPAT && \
+    make install && \
+    ln -sf /usr/local/bin/luajit /usr/bin/luajit && \
+    rm -rf /tmp/luajit
 
 # Install Fennel
 RUN curl -L https://fennel-lang.org/downloads/fennel-1.4.0 -o /usr/bin/fennel && \

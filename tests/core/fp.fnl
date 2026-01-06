@@ -1,7 +1,4 @@
-;; Verification for FP Library
-
 (local fp (require :src.core.fp))
-
 (print "--- Testing FP ---")
 
 ;; Map
@@ -19,18 +16,15 @@
       ys (fp.flatmap (fn [x] [x x]) xs)]
   (print "flatmap:" (table.concat ys " ")))
 
-;; Foldl (Reduce)
+;; Foldl/Reduce
 (let [xs [1 2 3]
-      ;; ((0 - 1) - 2) - 3 = -6
-      r  (fp.foldl (fn [acc x] (- acc x)) 0 xs)]
-  (print "foldl (-):" r))
+      r  (fp.foldl (fn [a x] (- a x)) 0 xs)]
+  (print "foldl (-):" r)) ;; -6
 
 ;; Foldr
 (let [xs [1 2 3]
-      ;; 1 - (2 - (3 - 0)) = 1 - (2 - 3) = 1 - (-1) = 2
-      ;; Note: f matches (val, acc) signature
-      r  (fp.foldr (fn [x acc] (- x acc)) 0 xs)]
-  (print "foldr (-):" r))
+      r  (fp.foldr (fn [x a] (- x a)) 0 xs)]
+  (print "foldr (-):" r)) ;; 2
 
 ;; Any/All
 (let [xs [1 2 3]]

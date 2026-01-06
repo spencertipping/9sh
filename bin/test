@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e
+
+# Build the docker image if it doesn't exist or if forced
+# Note: Since the Dockerfile changed, we should rebuild to be safe,
+# but docker build uses caching so it's reasonably fast if nothing changed.
+echo "Building 9sh-builder docker image..."
+docker build -t 9sh-builder .
+
+echo "Running tests in container..."
+docker run --rm -v $(pwd):/work 9sh-builder bash -c "
+  echo 'Running tests/core/fp.fnl...' && fennel tests/core/fp.fnl && \
+  echo 'Running tests/core/stats.fnl...' && fennel tests/core/stats.fnl && \
+  echo 'Running tests/core/oop_operators.fnl...' && fennel tests/core/oop_operators.fnl
+"

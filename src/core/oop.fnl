@@ -2,151 +2,123 @@
 ;; Provides traits, classes, and introspection via metatables.
 
 (local oop {})
-;; Fix for Fennel strictness regarding unpack
 (local unpack (or table.unpack _G.unpack))
+
 
 ;; --- Registry & Introspection ---
 
-;; Registry of all defined classes and traits for type checking
 (local registry {:classes {} :traits {}})
 (tset oop :registry registry)
 
-(fn oop.is? [obj type-def]
-  "Check if `obj` is an instance of `type-def` (class or trait)."
+(fn oop.is? [obj t]
   (if (and (= (type obj) "table") obj.__class)
-      (or (= obj.__class type-def)
-          (and type-def.trait (obj.__class:implements? type-def)))
+      (or (= obj.__class t)
+          (and t.trait (obj.__class:implements? t)))
       false))
 
-(fn oop.class [name] (. registry.classes name))
-(fn oop.trait [name] (. registry.traits name))
+(fn oop.class [n] (. registry.classes n))
+(fn oop.trait [n] (. registry.traits n))
 
-;; Documentation trait defining the interface for introspecting docs.
-;; Intentionally defined manually to bootstrap the system.
+
+;; Documentation helpers
 (local Documentation {})
 (set Documentation.trait true)
-(set Documentation.methods {:doc {:args [:element] :doc "Get documentation for an element."}})
+(set Documentation.methods {:doc {:args [:e] :doc "Get documentation for an element."}})
 (tset registry.traits "Documentation" Documentation)
 
-(fn oop.doc [obj element]
-  "Get documentation for an object or one of its elements."
-  (if (and (= (type obj) "table") obj.doc)
-      (obj:doc element)
-      nil))
+(fn oop.doc [o e]
+  (if (and (= (type o) "table") o.doc) (o:doc e) nil))
+
 
 ;; --- Trait Definition ---
 
 (fn oop.deftrait [name methods & doc]
-  "Define a new trait with method signatures and documentation.
-   methods: {:method-name {:args [:arg1] :doc \"description\"}}"
-  (let [trait {:trait true
-               :name name
-               :methods methods
-               :classes {} ;; Bidirectional: List of classes implementing this trait
-               :doc (or (unpack doc) "")}]
+  (let [t {:trait   true
+           :name    name
+           :methods methods
+           :classes {}
+           :doc     (or (unpack doc) "")}]
 
-    ;; Register
-    (tset registry.traits name trait)
+    (tset registry.traits name t)
 
-    ;; Generate invocation helpers for each method
-    (each [m-name m-spec (pairs methods)]
-      (tset oop m-name (fn [self ...]
-                         (if (and self self.__class (self.__class:implements? trait))
-                             ((. self m-name) self ...)
-                             (error (string.format "Object does not implement trait %s for method %s" name m-name))))))
+    ;; Generate invocation helpers
+    (each [m _ (pairs methods)]
+      (tset oop m (fn [self ...]
+                    (if (and self self.__class (self.__class:implements? t))
+                        ((. self m) self ...)
+                        (error (string.format "Object missing trait %s for method %s" name m))))))
 
-    ;; Documentation Implementation for Trait
-    (fn trait.doc [self element]
-       (if (= element nil) self.doc
-           (. self.methods element :doc)))
-
-    trait))
+    (fn t.doc [self e] (if (= e nil) self.doc (. self.methods e :doc)))
+    t))
 
 
 ;; --- Class Definition ---
 
 (local Class {})
-(tset Class :__index Class)
+(tset  Class :__index Class)
 
-(fn Class.overload+         [self f] (tset self :__add      f))
-(fn Class.overload-         [self f] (tset self :__sub      f))
-(fn Class.overload*         [self f] (tset self :__mul      f))
-(fn Class.overload/         [self f] (tset self :__div      f))
-(fn Class.overload%         [self f] (tset self :__mod      f))
-(fn Class.overload^         [self f] (tset self :__pow      f))
-(fn Class.overload-concat   [self f] (tset self :__concat   f))
-(fn Class.overload-len      [self f] (tset self :__len      f))
-(fn Class.overload-eq       [self f] (tset self :__eq       f))
-(fn Class.overload-lt       [self f] (tset self :__lt       f))
-(fn Class.overload-le       [self f] (tset self :__le       f))
-(fn Class.overload-tostring [self f] (tset self :__tostring f))
+;; Operator overloads
+(fn Class.overload+         [s f] (tset s.prototype :__add      f))
+(fn Class.overload-         [s f] (tset s.prototype :__sub      f))
+(fn Class.overload*         [s f] (tset s.prototype :__mul      f))
+(fn Class.overload/         [s f] (tset s.prototype :__div      f))
+(fn Class.overload%         [s f] (tset s.prototype :__mod      f))
+(fn Class.overload^         [s f] (tset s.prototype :__pow      f))
+(fn Class.overload-concat   [s f] (tset s.prototype :__concat   f))
+(fn Class.overload-len      [s f] (tset s.prototype :__len      f))
+(fn Class.overload-eq       [s f] (tset s.prototype :__eq       f))
+(fn Class.overload-lt       [s f] (tset s.prototype :__lt       f))
+(fn Class.overload-le       [s f] (tset s.prototype :__le       f))
+(fn Class.overload-tostring [s f] (tset s.prototype :__tostring f))
 
-;; Bitwise & Integer Ops (Lua 5.3+ / LuaJIT 2.1+)
-(fn Class.overload-band    [self f] (tset self :__band     f))
-(fn Class.overload-bor     [self f] (tset self :__bor      f))
-(fn Class.overload-bxor    [self f] (tset self :__bxor     f))
-(fn Class.overload-bnot    [self f] (tset self :__bnot     f))
-(fn Class.overload-shl     [self f] (tset self :__shl      f))
-(fn Class.overload-shr     [self f] (tset self :__shr      f))
-(fn Class.overload-idiv    [self f] (tset self :__idiv     f))
+(fn Class.overload-band     [s f] (tset s.prototype :__band     f))
+(fn Class.overload-bor      [s f] (tset s.prototype :__bor      f))
+(fn Class.overload-bxor     [s f] (tset s.prototype :__bxor     f))
+(fn Class.overload-bnot     [s f] (tset s.prototype :__bnot     f))
+(fn Class.overload-shl      [s f] (tset s.prototype :__shl      f))
+(fn Class.overload-shr      [s f] (tset s.prototype :__shr      f))
+(fn Class.overload-idiv     [s f] (tset s.prototype :__idiv     f))
+
 
 (fn oop.defclass [name fields & doc]
-  "Define a new class."
-  (let [cls {:name name
-             :fields fields
-             :methods {}
-             :traits {}
-             :doc (or (unpack doc) "")}]
+  (let [cls {:name      name
+             :fields    fields
+             :methods   {}
+             :traits    {}
+             :prototype {}
+             :doc       (or (unpack doc) "")}]
 
-    ;; Class Metaclass (for overload+)
+    (tset cls.prototype :__index cls.prototype)
+    (tset cls.prototype :__class cls)
+
     (setmetatable cls Class)
-
-    ;; Setup class as its own metatable (for __index and operators)
     (tset cls :__index cls)
 
-    ;; Constructor
     (set cls.new (fn [...]
-                   (let [instance (setmetatable {} cls) ;; Use cls as metatable directly
-                         ctor (. cls :init)]
-                     ;; Initialize fields
-                     (each [_ f (ipairs fields)] (tset instance f nil))
-                     (set instance.__class cls)
-                     (if ctor
-                         (ctor instance ...)
-                         ;; Default Init: Map args to fields
-                         (each [i val (ipairs [...])]
-                               (let [f (. fields i)]
-                                 (if f (tset instance f val)))))
-                     instance)))
+                   (let [inst (setmetatable {} cls.prototype)
+                         ctor (. cls.prototype :init)]
+                     (each [_ f (ipairs fields)] (tset inst f nil))
+                     (if ctor (ctor inst ...)
+                         (each [i v (ipairs [...])]
+                           (let [f (. fields i)] (if f (tset inst f v)))))
+                     inst)))
 
-    ;; Trait check
-    (fn cls.implements? [self trait]
-      (. self.traits trait.name))
-
-    ;; Documentation Implementation (Bootstrapped)
-    ;; Using dot syntax with explicit self
-    (fn cls.doc [self element]
-      (if (= element nil) self.doc
-          (. self.methods element :doc)))
+    (fn cls.implements? [self t] (. self.traits t.name))
+    (fn cls.doc [self e] (if (= e nil) self.doc (. self.methods e :doc)))
 
     (tset registry.classes name cls)
     cls))
 
 
 (fn oop.impl [cls trait methods]
-  "Implement a trait for a class."
   (if (not trait.trait) (error "Second argument must be a trait"))
 
-  ;; verify all methods are present
-  (each [m-name _ (pairs trait.methods)]
-    (if (= (. methods m-name) nil)
-        (error (string.format "Missing implementation for method %s of trait %s in class %s" m-name trait.name cls.name))))
+  (each [m _ (pairs trait.methods)]
+    (if (= (. methods m) nil)
+        (error (string.format "Missing impl for %s of %s in %s" m trait.name cls.name))))
 
-  ;; Copy methods to class
-  (each [m-name impl-fn (pairs methods)]
-    (tset cls m-name impl-fn)
-
-    ;; Check for operator overloading aliases
+  (each [m f (pairs methods)]
+    (tset cls.prototype m f)
     (let [op-map {"operator+"         :__add
                   "operator-"         :__sub
                   "operator*"         :__mul
@@ -166,9 +138,8 @@
                   "operator-shl"      :__shl
                   "operator-shr"      :__shr
                   "operator-idiv"     :__idiv}
-          metamethod (. op-map m-name)]
-      (if metamethod
-          (tset cls metamethod impl-fn))))
+          mm     (. op-map m)]
+      (if mm (tset cls.prototype mm f))))
 
   (tset cls.traits    trait.name true)
   (tset trait.classes cls.name   cls))
