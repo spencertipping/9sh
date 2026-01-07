@@ -165,6 +165,8 @@ install_fennel()
 
   if [ "$dist" = "alpine" ]; then
     ln -sf /usr/bin/luajit /usr/bin/lua
+  else
+    $su ln -sf /usr/local/bin/luajit /usr/local/bin/lua
   fi
 }
 
