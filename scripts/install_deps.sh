@@ -62,8 +62,12 @@ install_sys_deps()
         cmake ninja readline sqlite boost openssl@3                            \
         glib libvterm libnice
 
-      echo "DEBUG: Finding boost libs..."
-      find /opt/homebrew /usr/local -name "libboost_system*" 2>/dev/null || true
+      BREW_PREFIX=$(brew --prefix)
+      echo "DEBUG: Homebrew Prefix: $BREW_PREFIX"
+      echo "DEBUG: Contents of $BREW_PREFIX/lib:"
+      ls -F "$BREW_PREFIX/lib" | grep boost || echo "No boost in lib"
+      echo "DEBUG: Recursive find for libboost_system:"
+      find "$BREW_PREFIX" -name "libboost_system*" || echo "Find failed"
     else
       echo "brew not found; skipping sys deps"
     fi
