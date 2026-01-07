@@ -12,7 +12,7 @@ CXXFLAGS     += -static -I/usr/local/include -I/usr/include
 LDFLAGS      += -static -L/usr/local/lib -L/usr/lib
 LIBS         := -lluajit-5.1 -Wl,--whole-archive -lreadline -lncurses -lsqlite3 -lvterm \
                 -Wl,--no-whole-archive -ldatachannel -lboost_system -lpthread -ldl -lssl \
-                -lcrypto -lnice -lglib-2.0 -lgthread-2.0 -lintl
+                -lcrypto -lnice -lglib-2.0 -lgthread-2.0
 endif
 
 # MacOS Configuration

@@ -1,6 +1,8 @@
-#include <mntent.h>
 #include <cstring>
 #include <string>
+
+#if defined(__linux__)
+#include <mntent.h>
 
 extern "C" {
 
@@ -59,3 +61,11 @@ w_is_slow_mount(const char* path)
 }
 
 }
+
+#else
+
+extern "C" {
+int w_is_slow_mount(const char* path) { return 0; }
+}
+
+#endif

@@ -2,8 +2,6 @@
 #include <luajit-2.1/lua.hpp>
 #include <readline/history.h>
 #include <readline/readline.h>
-#include <sys/vfs.h>
-#include <linux/magic.h>
 #include <sqlite3.h>
 #include <vterm.h>
 
