@@ -38,7 +38,7 @@ LDFLAGS      += -L$(BREW_PREFIX)/lib -L$(BREW_PREFIX)/opt/readline/lib \
                 -L$(BREW_PREFIX)/opt/openssl@3/lib \
                 -L/usr/local/lib
 LIBS         := -lluajit-5.1 -lreadline -lncurses -lsqlite3 -lvterm \
-                -ldatachannel -lboost_system -lpthread -ldl -lssl -lcrypto
+                -ldatachannel -lpthread -ldl -lssl -lcrypto
 endif
 
 # Fennel Source Management
