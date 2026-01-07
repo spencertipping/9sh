@@ -9,7 +9,8 @@ LDFLAGS      :=
 # Linux Configuration
 ifeq ($(OS_NAME),Linux)
 CXXFLAGS     += -static -I/usr/local/include -I/usr/include
-LDFLAGS      += -static -Wl,--export-dynamic -L/usr/local/lib -L/usr/lib
+LDFLAGS      += -static -Wl,--export-dynamic -L/usr/local/lib -L/usr/lib \
+                -L/usr/lib/x86_64-linux-gnu -L/usr/lib/aarch64-linux-gnu
 
 # Use pkg-config to handle distro differences (e.g. -ltinfo on Ubuntu vs ncursesw on Alpine)
 PKG_WHOLE    := readline sqlite3 vterm
@@ -27,7 +28,7 @@ ifeq ($(OS_NAME),Darwin)
 # Assume Homebrew paths for dependencies.
 # Note: Linking statically on macOS is discouraged/hard for system libs.
 # We modify flags to link dynamically where necessary.
-BREW_PREFIX  := $(shell echo $${HOMEBREW_PREFIX:-/opt/homebrew})
+BREW_PREFIX  := $(shell brew --prefix)
 CXXFLAGS     += -I$(BREW_PREFIX)/include -I$(BREW_PREFIX)/opt/readline/include \
                 -I$(BREW_PREFIX)/opt/openssl@3/include \
                 -I$(BREW_PREFIX)/include/luajit-2.1 \

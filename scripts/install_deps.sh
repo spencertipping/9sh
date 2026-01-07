@@ -39,7 +39,7 @@ install_sys_deps()
       boost-dev boost-static                                                   \
       curl libtool automake autoconf                                           \
       glib-dev glib-static meson ncurses-static pkgconf                        \
-      zlib-static util-linux-dev
+      zlib-static util-linux-dev util-linux-static
 
   elif [ "$dist" = "ubuntu" ] || [ "$dist" = "debian" ] || [ "$os" = "Linux" ]; then
     $su apt-get update
