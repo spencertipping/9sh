@@ -69,6 +69,11 @@ build_luajit()
   git clone https://github.com/LuaJIT/LuaJIT.git "$tmp/luajit"
 
   cd "$tmp/luajit"
+
+  if [ "$os" = "Darwin" ]; then
+    export MACOSX_DEPLOYMENT_TARGET=12.0
+  fi
+
   make XCFLAGS=-DLUAJIT_ENABLE_LUA52COMPAT
   $su make install
 
@@ -111,7 +116,7 @@ build_libnice()
     -Dtests=disabled                                                           \
     --prefix=/usr/local
 
-  ninja -C build install
+  $su ninja -C build install
 
   rm -rf "$tmp"
   cd -
