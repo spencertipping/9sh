@@ -23,9 +23,11 @@ ifeq ($(OS_NAME),Darwin)
 BREW_PREFIX  := $(shell echo $${HOMEBREW_PREFIX:-/opt/homebrew})
 CXXFLAGS     += -I$(BREW_PREFIX)/include -I$(BREW_PREFIX)/opt/readline/include \
                 -I$(BREW_PREFIX)/opt/openssl@3/include \
-                -I$(BREW_PREFIX)/include/luajit-2.1
+                -I$(BREW_PREFIX)/include/luajit-2.1 \
+                -I/usr/local/include
 LDFLAGS      += -L$(BREW_PREFIX)/lib -L$(BREW_PREFIX)/opt/readline/lib \
-                -L$(BREW_PREFIX)/opt/openssl@3/lib
+                -L$(BREW_PREFIX)/opt/openssl@3/lib \
+                -L/usr/local/lib
 LIBS         := -lluajit-5.1 -lreadline -lncurses -lsqlite3 -lvterm \
                 -ldatachannel -lboost_system -lpthread -ldl -lssl -lcrypto
 endif

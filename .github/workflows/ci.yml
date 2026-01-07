@@ -19,79 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # --- Linux Dependencies ---
-      - name: Install System Deps (Linux)
-        if: runner.os == 'Linux'
+      # --- Install Dependencies (Unified) ---
+      - name: Install Dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake git ninja-build \
-            libreadline-dev libncurses-dev libsqlite3-dev libssl-dev \
-            libboost-system-dev libglib2.0-dev libtool automake autoconf pkg-config xxd
-
-      # --- macOS Dependencies ---
-      - name: Install System Deps (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew update
-          brew install cmake ninja readline sqlite boost openssl@3 glib libvterm libnice libdatachannel
-          # We build LuaJIT manually for 5.2 compat
-
-      # --- Build LuaJIT (Both) ---
-      - name: Build LuaJIT
-        run: |
-          git clone https://github.com/LuaJIT/LuaJIT.git luajit
-          cd luajit
-          make XCFLAGS=-DLUAJIT_ENABLE_LUA52COMPAT
-          sudo make install
-        # Installs to /usr/local
-
-      # --- Build libvterm (Linux) ---
-      # On macOS, brew version is fine. On Linux, we build to match Dockerfile/static needs?
-      # Actually, since we use dynamic linking on Linux in CI (no -static flag enforced for libs in makefile?
-      # Wait, Makefile Linux block HAS -static.
-      # If we link static, we need static libs (.a). apt installs .a? Usually yes (-dev packages).
-      # But libvterm might not be in apt or might be old. Dockerfile builds it.
-      # Safest to build from source on Linux.
-      - name: Build libvterm (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          git clone https://github.com/neovim/libvterm.git libvterm
-          cd libvterm
-          make
-          sudo make install
-
-      # --- Build libnice (Linux) ---
-      - name: Build libnice (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          git clone https://gitlab.freedesktop.org/libnice/libnice.git libnice
-          cd libnice
-          meson setup build -Ddefault_library=static -Dexamples=disabled -Dtests=disabled --prefix=/usr/local
-          ninja -C build install
-
-      # --- Build libdatachannel (Linux) ---
-      - name: Build libdatachannel (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          git clone --recursive https://github.com/paullouisageneau/libdatachannel.git libdatachannel
-          cd libdatachannel
-          cmake -B build -G Ninja \
-            -DCMAKE_BUILD_TYPE=MinSizeRel \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DUSE_NICE=ON \
-            -DNO_WEBSOCKET=OFF \
-            -DNO_MEDIA=ON \
-            -DNO_EXAMPLES=ON \
-            -DNO_TESTS=ON \
-            -DCMAKE_PREFIX_PATH=/usr/local
-          cmake --build build --target install
-
-      # --- Install Fennel (Both) ---
-      - name: Install Fennel
-        run: |
-          curl -L https://fennel-lang.org/downloads/fennel-1.4.0 -o fennel
-          chmod +x fennel
-          sudo mv fennel /usr/local/bin/fennel
+          chmod +x scripts/install_deps.sh
+          ./scripts/install_deps.sh
 
       # --- Run Build & Test ---
       - name: Build 9sh
