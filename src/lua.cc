@@ -51,6 +51,11 @@ void Lua::init_fennel_package()
   // Stack: [fennel_module_table]
   lua_pushvalue     (L_, -1);
   lua_setglobal     (L_, "fennel");
+
+  // fennel.install() to register searchers
+  lua_getfield      (L_, -1, "install");
+  lua_call          (L_, 0, 0);
+
   set_package_loaded("fennel");                                            // Stack: [fennel_module_table]
   lua_pop           (L_, 1);
 }

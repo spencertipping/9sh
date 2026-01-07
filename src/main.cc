@@ -38,7 +38,15 @@ int main(int argc, ch **argv)
   Args args(argc, argv);
   Lua  lua;
 
-  if (args.execute_flag_) lua.eval(args.eval_script_);
+  if (args.eval_flag_)
+    lua.eval(args.eval_script_);
+
+  else if (args.file_flag_)
+  {
+    St cmd = "(fennel.dofile \"" + args.script_file_ + "\")";
+    lua.eval(cmd);
+  }
+
   else
   {
     REPL repl(lua);

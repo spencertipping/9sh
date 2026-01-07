@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+cd "$(dirname "$0")/.."
 
 # Build the docker image if it doesn't exist or if forced
 # Note: Since the Dockerfile changed, we should rebuild to be safe,

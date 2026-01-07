@@ -6,5 +6,7 @@ struct Args final
   Args(int argc, ch **argv);
 
   St   eval_script_;
-  bool execute_flag_ = false;
+  St   script_file_;
+  bool eval_flag_ = false;
+  bool file_flag_ = false;
 };
