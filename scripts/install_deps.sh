@@ -6,17 +6,17 @@ set -e
 # setup
 # ------------------------------------------------------------------------------
 
-os    = $(uname -s)
-dist  = ""
-su    = ""
+os=$(uname -s)
+dist=""
+su=""
 
 if [ -f /etc/os-release ]; then
   . /etc/os-release
-  dist = $ID
+  dist=$ID
 fi
 
 if [ "$(id -u)" -ne 0 ]; then
-  su = "sudo"
+  su="sudo"
 fi
 
 echo "os=$os dist=$dist"
@@ -65,7 +65,7 @@ build_luajit()
 {
   echo "building luajit..."
 
-  tmp = $(mktemp -d)
+  tmp=$(mktemp -d)
   git clone https://github.com/LuaJIT/LuaJIT.git "$tmp/luajit"
 
   cd "$tmp/luajit"
@@ -85,7 +85,7 @@ build_libvterm()
 {
   echo "building libvterm..."
 
-  tmp = $(mktemp -d)
+  tmp=$(mktemp -d)
   git clone https://github.com/neovim/libvterm.git "$tmp/libvterm"
 
   cd "$tmp/libvterm"
@@ -101,7 +101,7 @@ build_libnice()
 {
   echo "building libnice..."
 
-  tmp = $(mktemp -d)
+  tmp=$(mktemp -d)
   git clone https://gitlab.freedesktop.org/libnice/libnice.git "$tmp/libnice"
 
   cd "$tmp/libnice"
@@ -122,15 +122,15 @@ build_libdatachannel()
 {
   echo "building libdatachannel..."
 
-  tmp = $(mktemp -d)
+  tmp=$(mktemp -d)
   git clone --recursive https://github.com/paullouisageneau/libdatachannel.git "$tmp/libdatachannel"
 
   cd "$tmp/libdatachannel"
 
-  pfx = "/usr/local"
+  pfx="/usr/local"
   if [ "$os" = "Darwin" ]; then
-    b_pfx = $(brew --prefix 2>/dev/null || echo /usr)
-    pfx   = "/usr/local;$b_pfx"
+    b_pfx=$(brew --prefix 2>/dev/null || echo /usr)
+    pfx="/usr/local;$b_pfx"
   fi
 
   cmake -B build -G Ninja                                                      \
