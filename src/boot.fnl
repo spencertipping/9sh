@@ -1,42 +1,50 @@
-(local bindings (require :bindings))
+(local b   (require :bindings))
 (local ffi (require :ffi))
+
 
 (fn hello []
   (print "Hello from embedded Fennel!")
-  (print (.. "SQLite Version: " (tostring (bindings.sqlite3.version))))
+  (print (.. "SQLite Version: " (tostring (b.sqlite3.version))))
 
-  (let [db-ptr (ffi.new "sqlite3*[1]")
-        rc (bindings.sqlite3.open ":memory:" db-ptr)]
-    (if (= rc bindings.sqlite3.OK)
-        (do
-          (print "Opened in-memory database.")
-          (let [db (. db-ptr 0)
-                stmt-ptr (ffi.new "sqlite3_stmt*[1]")]
-            ;; Create table
-            (bindings.sqlite3.exec db "CREATE TABLE test (id INTEGER, name TEXT);" nil nil nil)
+  (let [dp (ffi.new "sqlite3*[1]")
+        rc (b.sqlite3.open ":memory:" dp)]
 
-            ;; Insert data using prepared statement
-            (bindings.sqlite3.prepare_v2 db "INSERT INTO test VALUES (?, ?);" -1 stmt-ptr nil)
-            (let [stmt (. stmt-ptr 0)]
-               (bindings.sqlite3.bind_int stmt 1 42)
-               (bindings.sqlite3.bind_text stmt 2 "Fennel via Prepared Stmt" -1 nil)
-               (bindings.sqlite3.step stmt)
-               (bindings.sqlite3.finalize stmt))
+    (if (= rc b.sqlite3.OK)
+      (do
+        (print "Opened in-memory database.")
 
-            ;; Query data
-            (bindings.sqlite3.prepare_v2 db "SELECT id, name FROM test;" -1 stmt-ptr nil)
-            (let [stmt (. stmt-ptr 0)]
-              (while (= (bindings.sqlite3.step stmt) bindings.sqlite3.ROW)
-                (print (.. "Row: " (tostring (bindings.sqlite3.column_int stmt 0))
-                           " - " (tostring (ffi.string (bindings.sqlite3.column_text stmt 1))))))
-              (bindings.sqlite3.finalize stmt))
+        (let [db (. dp 0)
+              sp (ffi.new "sqlite3_stmt*[1]")]
 
-            (bindings.sqlite3.close db)))
-        (print "Failed to open database!")))
+          ;; Create table
+          (b.sqlite3.exec db "CREATE TABLE test (id INTEGER, name TEXT);" nil nil nil)
 
-  (let [ctx (bindings.asio.context_new)
-        timer (bindings.asio.timer_new ctx)]
+          ;; Insert data using prepared statement
+          (b.sqlite3.prepare_v2 db "INSERT INTO test VALUES (?, ?);" -1 sp nil)
+
+          (let [s (. sp 0)]
+            (b.sqlite3.bind_int  s 1 42)
+            (b.sqlite3.bind_text s 2 "Fennel via Prepared Stmt" -1 nil)
+            (b.sqlite3.step      s)
+            (b.sqlite3.finalize  s))
+
+          ;; Query data
+          (b.sqlite3.prepare_v2 db "SELECT id, name FROM test;" -1 sp nil)
+
+          (let [s (. sp 0)]
+            (while (= (b.sqlite3.step s) b.sqlite3.ROW)
+              (print (.. "Row: " (tostring (b.sqlite3.column_int s 0))
+                         " - "   (tostring (ffi.string (b.sqlite3.column_text s 1))))))
+            (b.sqlite3.finalize s))
+
+          (b.sqlite3.close db)))
+
+      (print "Failed to open database!")))
+
+  (let [c (b.asio.context_new)
+        t (b.asio.timer_new c)]
     (print "Boost.Asio timer created.")
-    (bindings.asio.context_delete ctx)))
+    (b.asio.context_delete c)))
+
 
 {:hello hello}
