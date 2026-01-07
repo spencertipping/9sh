@@ -50,6 +50,11 @@ install_sys_deps()
       automake autoconf pkg-config xxd                                         \
       zlib1g-dev libblkid-dev libmount-dev
 
+    echo "DEBUG: Finding libmount.a..."
+    find /usr -name libmount.a || true
+    echo "DEBUG: pkg-config mount libs:"
+    pkg-config --libs --static mount || true
+
   elif [ "$os" = "Darwin" ]; then
     if command -v brew >/dev/null 2>&1; then
       brew update
