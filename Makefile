@@ -7,9 +7,10 @@ CXXFLAGS     := -std=c++23 -Os -ffunction-sections -fdata-sections -Isrc -I/usr/
 LDFLAGS      :=
 
 # Linux Configuration
+# Linux Configuration
 ifeq ($(OS_NAME),Linux)
-CXXFLAGS     += -static -I/usr/local/include -I/usr/include
-LDFLAGS      += -static -Wl,--export-dynamic -L/usr/local/lib -L/usr/lib \
+CXXFLAGS     += -I/usr/local/include -I/usr/include
+LDFLAGS      += -Wl,--export-dynamic -L/usr/local/lib -L/usr/lib \
                 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/aarch64-linux-gnu
 
 # Use pkg-config to handle distro differences (e.g. -ltinfo on Ubuntu vs ncursesw on Alpine)
@@ -37,7 +38,7 @@ LDFLAGS      += -L$(BREW_PREFIX)/lib -L$(BREW_PREFIX)/opt/readline/lib \
                 -L$(BREW_PREFIX)/opt/openssl@3/lib \
                 -L/usr/local/lib
 LIBS         := -lluajit-5.1 -lreadline -lncurses -lsqlite3 -lvterm \
-                -ldatachannel -lboost_system-mt -lpthread -ldl -lssl -lcrypto
+                -ldatachannel -lboost_system -lpthread -ldl -lssl -lcrypto
 endif
 
 # Fennel Source Management
