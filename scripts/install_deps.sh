@@ -38,7 +38,8 @@ install_sys_deps()
       sqlite-dev sqlite-static                                                 \
       boost-dev boost-static                                                   \
       curl libtool automake autoconf                                           \
-      glib-dev glib-static meson ncurses-static pkgconf
+      glib-dev glib-static meson ncurses-static pkgconf                        \
+      zlib-static util-linux-dev
 
   elif [ "$dist" = "ubuntu" ] || [ "$dist" = "debian" ] || [ "$os" = "Linux" ]; then
     $su apt-get update
@@ -46,7 +47,8 @@ install_sys_deps()
       build-essential cmake git ninja-build meson curl                         \
       libreadline-dev libncurses-dev libsqlite3-dev libssl-dev                 \
       libboost-system-dev libglib2.0-dev libtool libtool-bin                   \
-      automake autoconf pkg-config xxd
+      automake autoconf pkg-config xxd                                         \
+      zlib1g-dev libblkid-dev libmount-dev
 
   elif [ "$os" = "Darwin" ]; then
     if command -v brew >/dev/null 2>&1; then

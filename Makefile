@@ -4,15 +4,22 @@ OS_NAME      := $(shell uname -s)
 # Global Settings
 CXX          := g++
 CXXFLAGS     := -std=c++23 -Os -ffunction-sections -fdata-sections -Isrc -I/usr/include/luajit-2.1
-LDFLAGS      := -Wl,--export-dynamic
+LDFLAGS      :=
 
 # Linux Configuration
 ifeq ($(OS_NAME),Linux)
 CXXFLAGS     += -static -I/usr/local/include -I/usr/include
-LDFLAGS      += -static -L/usr/local/lib -L/usr/lib
-LIBS         := -lluajit-5.1 -Wl,--whole-archive -lreadline -lncurses -lsqlite3 -lvterm \
-                -Wl,--no-whole-archive -ldatachannel -lboost_system -lpthread -ldl -lssl \
-                -lcrypto -lnice -lglib-2.0 -lgthread-2.0
+LDFLAGS      += -static -Wl,--export-dynamic -L/usr/local/lib -L/usr/lib
+
+# Use pkg-config to handle distro differences (e.g. -ltinfo on Ubuntu vs ncursesw on Alpine)
+PKG_WHOLE    := readline sqlite3 vterm
+PKG_STD      := luajit nice glib-2.0 gthread-2.0 openssl
+
+LIBS_WHOLE   := $(shell pkg-config --libs --static $(PKG_WHOLE))
+LIBS_STD     := $(shell pkg-config --libs --static $(PKG_STD))
+
+LIBS         := -Wl,--whole-archive $(LIBS_WHOLE) -Wl,--no-whole-archive \
+                $(LIBS_STD) -ldatachannel -lboost_system -lpthread -ldl
 endif
 
 # MacOS Configuration
