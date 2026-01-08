@@ -48,12 +48,9 @@ install_sys_deps()
       libreadline-dev libncurses-dev libsqlite3-dev libssl-dev                 \
       libboost-system-dev libglib2.0-dev libtool libtool-bin                   \
       automake autoconf pkg-config xxd                                         \
-      zlib1g-dev libblkid-dev libmount-dev
+      zlib1g-dev
 
-    echo "DEBUG: Finding libmount.a..."
-    find /usr -name libmount.a || true
-    echo "DEBUG: pkg-config mount libs:"
-    pkg-config --libs --static mount || true
+    # Note: we will build libmount/libblkid from source to ensure static libs
 
   elif [ "$os" = "Darwin" ]; then
     if command -v brew >/dev/null 2>&1; then
@@ -169,6 +166,36 @@ build_libdatachannel()
 }
 
 
+build_util_linux()
+{
+  echo "building util-linux (libmount/libblkid)..."
+
+  tmp=$(mktemp -d)
+  # using a stable release tag
+  git clone --depth 1 --branch v2.39.3 https://github.com/util-linux/util-linux.git "$tmp/util-linux"
+
+  cd "$tmp/util-linux"
+
+  ./autogen.sh
+  ./configure \
+    --disable-all-programs \
+    --enable-libblkid \
+    --enable-libmount \
+    --enable-static \
+    --disable-shared \
+    --without-python \
+    --without-systemd \
+    --prefix=/usr/local
+
+  make
+  $su make install
+
+  rm -rf "$tmp"
+  cd -
+}
+
+
+
 install_fennel()
 {
   echo "installing fennel..."
@@ -196,6 +223,7 @@ if [ "$os" = "Linux" ]; then
   build_libvterm
   build_libnice
   build_libdatachannel
+  build_util_linux
 
 elif [ "$os" = "Darwin" ]; then
   build_libdatachannel
