@@ -7543,7 +7543,7 @@ local function compile(files)
   end
   return nil
 end
-local _943_0 = arg; if not _943_0 then return fennel end
+return fennel --
 local function _944_(...)
   return (0 == #arg)
 end

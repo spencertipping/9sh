@@ -44,7 +44,7 @@ install_sys_deps()
   elif [ "$dist" = "ubuntu" ] || [ "$dist" = "debian" ] || [ "$os" = "Linux" ]; then
     $su apt-get update
     $su apt-get install -y                                                     \
-      build-essential cmake git ninja-build meson curl                         \
+      build-essential cmake git ninja-build meson curl gettext                 \
       libreadline-dev libncurses-dev libsqlite3-dev libssl-dev                 \
       libboost-system-dev libglib2.0-dev libtool libtool-bin                   \
       automake autoconf pkg-config xxd                                         \
