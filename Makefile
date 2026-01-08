@@ -17,15 +17,15 @@ LDFLAGS      += -Wl,--export-dynamic -L/usr/local/lib -L/usr/lib \
 PKG_WHOLE    := readline sqlite3 vterm
 PKG_STD      := nice glib-2.0 gthread-2.0 openssl
 
-LIBS_WHOLE   := $(shell pkg-config --libs --static $(PKG_WHOLE))
-LIBS_STD     := $(shell pkg-config --libs --static $(PKG_STD))
+LIBS_WHOLE   := $(filter-out -lm,$(shell pkg-config --libs --static $(PKG_WHOLE)))
+LIBS_STD     := $(filter-out -lm,$(shell pkg-config --libs --static $(PKG_STD)))
 
 # Force static linking for core dependencies
 # We use -Wl,-Bstatic to force static linking for the libraries found,
 # and switch back to -Wl,-Bdynamic for system libraries (pthread, dl).
 LIBS         := -Wl,-Bstatic -Wl,--whole-archive $(LIBS_WHOLE) -Wl,--no-whole-archive \
                 $(LIBS_STD) -lluajit-5.1 -ldatachannel -lboost_system \
-                -Wl,-Bdynamic -lpthread -ldl
+                -Wl,-Bdynamic -lpthread -ldl -lm
 endif
 
 # MacOS Configuration
@@ -117,8 +117,8 @@ $(BC_HDRS):  src/%_bc.h: src/%.bc
 
 src/fennel.lua:
 	cp $(shell which fennel) $@
-	sed -i '1d' $@
-	sed -i 's/local _943_0 = arg/do return fennel end --/' $@
+	sed '1d' $@ > $@.tmp && mv $@.tmp $@
+	sed 's/local _943_0 = arg/do return fennel end --/' $@ > $@.tmp && mv $@.tmp $@
 
 clean:
 	rm -f 9sh src/*.o src/*.bc src/*.lua src/fennel.lua src/*_bc.cc src/*_bc.h
