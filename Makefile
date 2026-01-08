@@ -15,20 +15,22 @@ LDFLAGS      += -Wl,--export-dynamic -L/usr/local/lib -L/usr/lib \
 
 # Use pkg-config to handle distro differences (e.g. -ltinfo on Ubuntu vs ncursesw on Alpine)
 PKG_WHOLE    := readline sqlite3 vterm
-PKG_STD      := luajit nice glib-2.0 gthread-2.0 openssl
+PKG_STD      := nice glib-2.0 gthread-2.0 openssl
 
 LIBS_WHOLE   := $(shell pkg-config --libs --static $(PKG_WHOLE))
 LIBS_STD     := $(shell pkg-config --libs --static $(PKG_STD))
 
-LIBS         := -Wl,--whole-archive $(LIBS_WHOLE) -Wl,--no-whole-archive \
-                $(LIBS_STD) -ldatachannel -lboost_system -lpthread -ldl
+# Force static linking for core dependencies
+# We use -Wl,-Bstatic to force static linking for the libraries found,
+# and switch back to -Wl,-Bdynamic for system libraries (pthread, dl).
+LIBS         := -Wl,-Bstatic -Wl,--whole-archive $(LIBS_WHOLE) -Wl,--no-whole-archive \
+                $(LIBS_STD) -lluajit-5.1 -ldatachannel -lboost_system \
+                -Wl,-Bdynamic -lpthread -ldl
 endif
 
 # MacOS Configuration
 ifeq ($(OS_NAME),Darwin)
 # Assume Homebrew paths for dependencies.
-# Note: Linking statically on macOS is discouraged/hard for system libs.
-# We modify flags to link dynamically where necessary.
 BREW_PREFIX  := $(shell brew --prefix)
 CXXFLAGS     += -I$(BREW_PREFIX)/include -I$(BREW_PREFIX)/opt/readline/include \
                 -I$(BREW_PREFIX)/opt/openssl@3/include \
@@ -37,8 +39,16 @@ CXXFLAGS     += -I$(BREW_PREFIX)/include -I$(BREW_PREFIX)/opt/readline/include \
 LDFLAGS      += -L$(BREW_PREFIX)/lib -L$(BREW_PREFIX)/opt/readline/lib \
                 -L$(BREW_PREFIX)/opt/openssl@3/lib \
                 -L/usr/local/lib
-LIBS         := -lluajit-5.1 -lreadline -lncurses -lsqlite3 -lvterm \
-                -ldatachannel -lpthread -ldl -lssl -lcrypto
+
+# Note: We link directly against .a files to ensure static linking
+# where possible, avoiding "library not loaded" errors.
+# System libs (ncurses, pthread, dl) remain dynamic.
+LIBS         := /usr/local/lib/libluajit-5.1.a \
+                $(BREW_PREFIX)/opt/readline/lib/libreadline.a \
+                $(BREW_PREFIX)/opt/sqlite/lib/libsqlite3.a \
+                $(BREW_PREFIX)/opt/openssl@3/lib/libssl.a \
+                $(BREW_PREFIX)/opt/openssl@3/lib/libcrypto.a \
+                -lncurses -lvterm -ldatachannel -lpthread -ldl
 endif
 
 # Fennel Source Management
@@ -75,7 +85,11 @@ test:        9sh
 	echo "Running tests..." && \
 	./9sh tests/core/fp.fnl && \
 	./9sh tests/core/stats.fnl && \
-	./9sh tests/core/oop_operators.fnl
+	./9sh tests/core/oop_operators.fnl && \
+	make test_linking
+
+test_linking: 9sh
+	./scripts/verify_linking.sh ./9sh
 
 # Compilation Rules
 %.o:         %.cc
