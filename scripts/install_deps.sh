@@ -56,7 +56,7 @@ install_sys_deps()
     if command -v brew >/dev/null 2>&1; then
       brew update
       brew install                                                             \
-        cmake ninja readline sqlite boost openssl@3                            \
+        cmake ninja readline sqlite boost openssl@3 libtool                    \
         glib libvterm libnice
 
       BREW_PREFIX=$(brew --prefix)
