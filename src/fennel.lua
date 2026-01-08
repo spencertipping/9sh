@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: MIT
 -- SPDX-FileCopyrightText: Calvin Rose and contributors
 package.preload["fennel.binary"] = package.preload["fennel.binary"] or function(...)
-  local fennel = require("fennel")
+  local fennel = require("fennel"); do return fennel end --
   local _945_ = require("fennel.utils")
   local copy = _945_["copy"]
   local warn = _945_["warn"]
@@ -7279,7 +7279,7 @@ package.preload["fennel"] = package.preload["fennel"] or function(...)
   end
   return mod
 end
-fennel = require("fennel")
+fennel = require("fennel"); do return fennel end --
 local _914_ = require("fennel.utils")
 local pack = _914_["pack"]
 local unpack = _914_["unpack"]
@@ -7543,7 +7543,7 @@ local function compile(files)
   end
   return nil
 end
-do return fennel end --
+local _943_0 = arg
 local function _944_(...)
   return (0 == #arg)
 end

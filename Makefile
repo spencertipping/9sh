@@ -118,7 +118,7 @@ $(BC_HDRS):  src/%_bc.h: src/%.bc
 src/fennel.lua:
 	cp $(shell which fennel) $@
 	sed '1d' $@ > $@.tmp && mv $@.tmp $@
-	sed 's/local _943_0 = arg/do return fennel end --/' $@ > $@.tmp && mv $@.tmp $@
+	sed 's/fennel = require("fennel")/fennel = require("fennel"); do return fennel end --/' $@ > $@.tmp && mv $@.tmp $@
 
 clean:
 	rm -f 9sh src/*.o src/*.bc src/*.lua src/fennel.lua src/*_bc.cc src/*_bc.h
