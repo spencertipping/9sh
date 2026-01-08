@@ -48,7 +48,8 @@ LIBS         := /usr/local/lib/libluajit-5.1.a \
                 $(BREW_PREFIX)/opt/sqlite/lib/libsqlite3.a \
                 $(BREW_PREFIX)/opt/openssl@3/lib/libssl.a \
                 $(BREW_PREFIX)/opt/openssl@3/lib/libcrypto.a \
-                -lncurses -lvterm -ldatachannel -lpthread -ldl
+                /usr/local/lib/libvterm.a \
+                -lncurses -ldatachannel -lpthread -ldl
 endif
 
 # Fennel Source Management

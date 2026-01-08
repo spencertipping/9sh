@@ -226,6 +226,7 @@ if [ "$os" = "Linux" ]; then
   build_util_linux
 
 elif [ "$os" = "Darwin" ]; then
+  build_libvterm
   build_libdatachannel
 fi
 
