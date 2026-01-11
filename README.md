@@ -7,19 +7,18 @@ A UNIX shell built on a semantic VFS. 9sh extends POSIX shell scripting by addin
 
 
 ## Core concepts
-+ [VFS](doc/vfs.md) -- read this first, as everything else is based on it
+If you're new to 9sh, you'll probably want to read these in order. The VFS underpins or influences almost everything else, and is written using objects and traits.
+
++ [VFS](doc/vfs.md)
 + [Objects and traits](doc/objects.md)
 + [Commands](doc/commands.md)
++ [Types and unification](doc/types.md)
++ [Simulation](doc/simulation.md)
++ [Stochastic optimization](doc/optimization.md)
 
 
-## Core mechanics
-9sh is rooted in the [VFS](doc/vfs.md), which is really an object graph dressed as a filesystem. Because the user has a position within this object graph, the current node (which can consult its ancestors) determines all implicit behavior by implementing traits that 9sh uses to provide core functionality. **The VFS is an extensible, metaclassed boundary definition** for a few entangled domains:
-
-+ Scoping
-+ Command resolution and parsing
-+ Overload resolution and type solving
-+ Performance, cost, and impact simulation
-+ Statistical optimization
+## Examples
+**TODO**
 
 
 ## Contributors
