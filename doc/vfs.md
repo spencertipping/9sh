@@ -138,10 +138,27 @@ The VFS is configured in `~/.9shrc`. For example:
 
 ;; Let's define a project with project-local resources. Do this
 ;; if you want to centralize its configuration.
-(let [p (nine.root:def ://proj/foo (nine.vfs.dir))]
+;;
+;; We also specify the backing location for the directory. When
+;; you run POSIX commands from this virtual directory, they'll
+;; have CWD set to ~/git/projects/foo in the UNIX filesystem --
+;; and `ls` on the virtual dir will be populated from there.
+(let [p (nine.root:def ://proj/foo (nine.vfs.dir "~/git/projects/foo"))]
   (p:def ://host/foo (nine.db.ssh-host "ubuntu@foo.io"))
   (p:def ://db/prod  (nine.db.sqlite "prod.db"))
-  (p:def ://db/dev   (nine.db.sqlite "dev.db")))
+  (p:def ://db/dev   (nine.db.sqlite "dev.db"))
+
+  ;; Insert a VFS entry into the first moment, as though it were
+  ;; a real file. This will _not_ be inherited by subdirectories.
+  ;; You can `cat www` to fetch homepage contents.
+  ;;
+  ;; www is simultaneously a file and a directory; its interpretation
+  ;; will vary by usage. It's never "real" in the POSIX sense, even
+  ;; though it appears inline. If you run POSIX ls, you won't see www
+  ;; because it doesn't actually exist (but if you run 9sh ls, it
+  ;; will be visible).
+  (p:def :/www        (nine.net.http "https://foo.io")))
+  (p:def :/www/status (nine.net.http "https://status.foo.io"))
 
 ;; Trust some directories by automatically evaluating their .9shrc.
 ;; These 9shrc files are evaluated each time you cd into the directory.
