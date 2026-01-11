@@ -22,15 +22,16 @@ cat //input/* | grep foo | sort | uniq -c > //output/*
 9sh processes the above line like this:
 
 ``` fennel
-(let [command (PWD:command line)             ; ask VFS PWD to resolve command
-      parser  (command:parser PWD)           ; construct parser
-      parsed  (parser:parse line)            ; typed ASTs
-      linked  (grep #(not= $ nil)
-                    (map #($:link) parsed))  ; unify types
+(let [command (PWD:command line)         ; ask VFS PWD to resolve command
+      parser  (command:parser PWD)       ; construct parser
+      parsed  (parser:parse line)        ; typed ASTs
+      linked  (->> parsed
+                   (grep #(not= $ nil))
+                   (map #($:link)))      ; unify types
       ;; TODO: choose "best" of the linked alternatives
       ;; (how is best defined? do we optimize across all?)
-      opt     (linked:optimize)]             ; optimize DoFs
-  (opt:execute))                             ; execute the plan
+      opt     (linked:optimize)]         ; optimize DoFs
+  (opt:execute))                         ; execute the plan
 ```
 
 When running interactively, the parse and link phases happen on every modification to the input line. `(command:parser)` is an arbitrary combinatory parser that provides syntax highlighting and autocompletion hints as the user is typing. Note that it doesn't block on the VFS or RPC; remote resources may arrive later to provide refined type options. However, command execution _does_ block on RPC because the executed outcome must be consistent.
