@@ -64,6 +64,8 @@
 (fn Class.overload/         [s f] (tset s.prototype :__div      f))
 (fn Class.overload%         [s f] (tset s.prototype :__mod      f))
 (fn Class.overload^         [s f] (tset s.prototype :__pow      f))
+(fn Class.overload-call     [s f] (tset s.prototype :__call     f))
+(fn Class.overload-index    [s f] (tset s.prototype :__index    f))
 (fn Class.overload-concat   [s f] (tset s.prototype :__concat   f))
 (fn Class.overload-len      [s f] (tset s.prototype :__len      f))
 (fn Class.overload-eq       [s f] (tset s.prototype :__eq       f))
@@ -125,6 +127,8 @@
                   "operator/"         :__div
                   "operator%"         :__mod
                   "operator^"         :__pow
+                  "operator-call"     :__call
+                  "operator-index"    :__index
                   "operator-concat"   :__concat
                   "operator-len"      :__len
                   "operator-eq"       :__eq

@@ -129,14 +129,16 @@ While you can write `cd //db//x`, 9sh doesn't define what this would mean and th
 
 
 ## VFS configuration
-The VFS is configured in `~/.9shrc`. For example:
+The VFS is configured in `~/.9shrc`, which creates the control state for the [persistence structure](persistence.md). For example:
 
 ``` fennel
-;; Entries defined into / are visible everywhere
-(nine.root:def ://db/foo (nine.db.postgres {...}))
-(nine.root:def ://db/bar (nine.db.mysql    {...}))
+(local fs (require :nine.vfs))
 
-(nine.root:def ://host/x (nine.db.ssh-host {...}))
+;; Entries defined into / are visible everywhere
+(fs.root:def ://db/foo (fs.db.postgres {...}))
+(fs.root:def ://db/bar (fs.db.mysql    {...}))
+
+(fs.root:def ://host/x (fs.db.ssh-host {...}))
 
 ;; Let's define a project with project-local resources. Do this
 ;; if you want to centralize its configuration.
@@ -145,10 +147,11 @@ The VFS is configured in `~/.9shrc`. For example:
 ;; you run POSIX commands from this virtual directory, they'll
 ;; have CWD set to ~/git/projects/foo in the UNIX filesystem --
 ;; and `ls` on the virtual dir will be populated from there.
-(let [p (nine.root:def ://proj/foo (nine.vfs.dir "~/git/projects/foo"))]
-  (p:def ://host/foo (nine.db.ssh-host "ubuntu@foo.io"))
-  (p:def ://db/prod  (nine.db.sqlite "prod.db"))
-  (p:def ://db/dev   (nine.db.sqlite "dev.db"))
+(let [p (fs.root:def ://proj/foo
+                     (fs.dir "~/git/projects/foo"))]
+  (p:def ://host/foo (fs.db.ssh-host "ubuntu@foo.io"))
+  (p:def ://db/prod  (fs.db.sqlite "prod.db"))
+  (p:def ://db/dev   (fs.db.sqlite "dev.db"))
 
   ;; Insert a VFS entry into the first moment, as though it were
   ;; a real file. This will _not_ be inherited by subdirectories.
@@ -159,11 +162,11 @@ The VFS is configured in `~/.9shrc`. For example:
   ;; though it appears inline. If you run POSIX ls, you won't see www
   ;; because it doesn't actually exist (but if you run 9sh ls, it
   ;; will be visible).
-  (p:def :/www        (nine.net.http "https://foo.io")))
-  (p:def :/www/status (nine.net.http "https://status.foo.io"))
+  (p:def :/www        (fs.net.http "https://foo.io")))
+  (p:def :/www/status (fs.net.http "https://status.foo.io"))
 
 ;; Trust some directories by automatically evaluating their .9shrc.
 ;; These 9shrc files are evaluated each time you cd into the directory.
-(nine.root:def ://proj/bar (nine.vfs.dir {:trust true}))
-(nine.root:def ://proj/bif (nine.vfs.dir {:trust true}))
+(fs.root:def ://proj/bar (fs.dir {:trust true}))
+(fs.root:def ://proj/bif (fs.dir {:trust true}))
 ```

@@ -11,7 +11,6 @@ If you're new to 9sh, you'll probably want to read these in order. The VFS under
 
 + Foundation
   + [VFS](doc/vfs.md)
-  + [Objects and traits](doc/objects.md)
 + Commands
   + [Commands](doc/commands.md)
   + [Types and unification](doc/types.md)
