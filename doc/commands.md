@@ -16,7 +16,7 @@ $ @py x | y                     # probably not a shell pipe
 @py: 30
 $ @py x | wc -c                 # probably a shell pipe
 @py: 3
-$ @gemini explain `ls | wc -l`  # not a shell pipe
+$ @gemini Explain `ls | wc -l`  # not a shell pipe
 @gemini: ...
 $
 ```

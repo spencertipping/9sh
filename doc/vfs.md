@@ -11,10 +11,10 @@ The 9sh VFS overloads repeated `/` characters to access higher-order directory r
 A quick rule of thumb:
 
 + The first moment reflects UNIX filesystem reality (or a transformation)
-+ The second moment inherits from parent directories
-+ The third moment inherits from parent classes
++ The second moment inherits from parent _directories_
++ The third moment inherits from parent _classes_
 
-VFS directories _can_ modify these behaviors to deviate from the standard convention, but they usually don't.
+Although VFS entries can modify these behaviors to deviate from the standard convention, they usually don't.
 
 
 ## Quick overview
@@ -123,7 +123,9 @@ $
 
 
 ## Chained higher-order moments
-While you can write `cd //db//x`, 9sh doesn't define what this would mean and this `cd` operation will usually fail. However, `cd //db///meta` _is_ well-defined, as all VFS entries define `///` attributes. These are inherited through the OOP system (via trait implementation) rather than from parent directories.
+While you can write `cd //db//x`, 9sh doesn't define what this would mean and this `cd` operation will usually fail. However, `cd //db///meta` _is_ well-defined, as all VFS entries define `///` attributes. `cd ///meta///meta///meta` is also well-defined.
+
+`///` entries are inherited through the OOP system (via trait implementation) rather than from parent directories.
 
 
 ## VFS configuration
