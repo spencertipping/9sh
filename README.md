@@ -17,6 +17,10 @@ If you're new to 9sh, you'll probably want to read these in order. The VFS under
   + [Simulation](doc/simulation.md)
   + [Stochastic optimization](doc/optimization.md)
 
+**Core idea:** data promises, `echo hi > foo` should track `foo`'s existence for future steps, helping the parser
+
+**Core idea:** cylinders for state locality
+
 
 ## Examples
 **TODO**
