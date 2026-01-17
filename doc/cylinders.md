@@ -1,0 +1,2 @@
+# 9sh cylinders
+9sh is a distributed system, which means that time is only partially ordered. A _cylinder,_ named for the database symbol in technical diagrams, is any area in which readers and writers agree about a total ordering. An _echo_ is a non-canonical view of a cylinder, e.g. a cache. To unify frames of reference, the echo is always identified by the cylinder-time it represents. These definitions are deliberately simple: if there are multiple writers to a cylinder, their edits must be serialized for the cylinder's state to be deterministic.
