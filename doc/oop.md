@@ -47,3 +47,7 @@ A `class` is an object that maintains a mutable schema and creates `data` object
 ```
 
 `(obj:as nine.vfs.dir)` returns ... what exactly? I like the idea that traits are conditional; it captures "am I a file" vs "am I a dir" well; but it also requires that we have immutable object states.
+
+Close. If non-nil, it returns an echo of the object into a state compatible with the trait. The underlying object may later diverge, but the echo remains operable if outdated. If the underlying object is immutable, this logic is free.
+
+**TODO:** think about this. It could be great or it could be horrible.
