@@ -23,6 +23,8 @@ $ cat 0///meta/class 0///fields/host 0///fields/port
 postgres-db
 dev
 5432
+$ 0///fn/str
+postgres://dev:5432/dev-db
 ```
 
 Class instances can implement traits to participate more fully in the VFS, but the third-moment meta lookups always provide `///meta` and, for class instances, `///fields`.
@@ -32,3 +34,16 @@ Class instances can implement traits to participate more fully in the VFS, but t
 A cylinder's data is stored in records, each of whose schema is specified by an immutable `data`. Since `data` instances are immutable, they can meaningfully be used as echoes from within other cylinders; this allows objects to be distributed.
 
 A `class` is an object that maintains a mutable schema and creates `data` objects as needed when instantiated. You can think of `data` as a git commit and `class` as a branch.
+
+
+## Traits
+9sh traits apply to specific _runtime states,_ not just object types:
+
+``` fennel
+(let [obj (nine.vfs:resolve "/foo/bar")
+      dir (obj:as nine.vfs.dir)]  ; a dir or nil
+  (if dir (do
+    (dir:ls))))
+```
+
+`(obj:as nine.vfs.dir)` returns ... what exactly? I like the idea that traits are conditional; it captures "am I a file" vs "am I a dir" well; but it also requires that we have immutable object states.
