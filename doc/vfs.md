@@ -62,7 +62,7 @@ This case is particularly interesting because the `.csv.zst` file extension prov
 You can `cd` into any of these locations: `cd //db; cut foo,bar table` works, and `cd //host/*` works as well, landing you in a multi-homed virtual directory targeting all hosts at once. The files visible to you are the union of the files on remotes, their sizes, modtimes, UIDs, and other attributes are reported as distributions rather than scalars, and any noninteractive command you run will execute on all hosts simultaneously, e.g. `uptime > uptime.log` will create `uptime.log` on every host. This execution behavior, as with most other implicit context, is determined by the VFS PWD.
 
 
-## Navigation
+## Navigation mechanics
 ``` sh
 $ cd       # pwd = ~
 $ ls       # entries of the first moment of $PWD
