@@ -19,12 +19,10 @@ Now we can observe existing instances of this class in the VFS:
 $ cd //9/c1/postgres-db
 $ ls
 0  1  2
-$ cat 0
-postgres://dev:5432/dev-db
-$ cat 0///class
+$ cat 0///meta/class 0///fields/host 0///fields/port
 postgres-db
-$ cat 0///host
 dev
-$ cat 0///port
 5432
 ```
+
+Class instances can implement traits to participate more fully in the VFS, but the third-moment meta lookups always provide `///meta` and, for class instances, `///fields`.
