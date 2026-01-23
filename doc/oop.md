@@ -26,7 +26,7 @@ $ 0///fn/str
 postgres://dev:5432/dev-db
 ```
 
-Class instances can implement traits to participate more fully in the VFS, but the third-moment meta lookups always provide `///meta` and, for class instances, `///fields`.
+Class instances can implement projections to participate more fully in the VFS, but the third-moment meta lookups always provide `///meta` and, for class instances, `///fields`.
 
 
 ## `data` and `class`
@@ -35,20 +35,24 @@ A cylinder's data is stored in records, each of whose schema is specified by an 
 A `class` is an object that maintains a mutable schema and creates `data` objects as needed when instantiated. You can think of `data` as a git tree and `class` as a branch. This means `class` instances remain flexible while `data` snapshots are stable enough for distributed usage. (Metaclasses like `class` may provide migration paths to upgrade objects after changing the class definition.)
 
 
-## `trait` and RTTI
-A `trait` is a collection of behavior an object can opt into, but 9sh traits are predicated on _runtime state,_ not just type information:
+## `proj` and `trait`
+A `proj`, short for "projection", is a collection of behavior an object can opt into, but 9sh projections are predicated on _runtime state,_ not just type information:
 
 ``` fennel
 (let [c1  (nine:c1)
       obj (c1.vfs:at "/foo/bar")  ; a VFS entry
+
+      ;; nine.vfs.dir is a projection that is defined for
+      ;; VFS entries that are directories.
       dir (nine.vfs.dir:on obj)]  ; a VFS dir or nil
+
   (if dir (do
     (ls dir))))
 ```
 
-In 9sh, you downcast into traits rather than subclasses. If the object is mutable, trait-downcasts are implemented in a metaclass-determined way, but a simple strategy is to return a snapshot of the object at the moment that it implemented the trait. That is, nobody, even members of the same cylinder, can revoke your successfully-downcast object.
+In 9sh, you project rather than downcast to subclasses. If the object is mutable, projections are implemented in a metaclass-determined way, but a simple strategy is to return a snapshot of the object at the moment that it was projectable. That is, nobody, even members of the same cylinder, can revoke your successfully-projected object.
 
-This system is useful for distributed applications, but it isn't perfect: consider a nominally immutable object that wraps a UNIX path. Because the OS is the ultimate state owner and can modify the FS object out from under us, we need to escalate to a file descriptor to reliably invoke trait behavior:
+This system is useful for distributed applications, but it isn't perfect: consider a nominally immutable object that wraps a UNIX path. Because the OS is the ultimate state owner and can modify the FS object out from under us, we need to escalate to a file descriptor to reliably invoke projected behavior:
 
 ``` fennel
 (let [ty  nine.types
@@ -57,8 +61,9 @@ This system is useful for distributed applications, but it isn't perfect: consid
   (cls:def     (ty:str) :path)
   (cls:defctor (fn [this path] (tset this :path path)))
 
+  ;; This class may be projectable to the nine.vfs.dir projection
   (cls:impl nine.vfs.dir
-    ;; Determine whether we implement the trait...
+    ;; Determine whether we can be projected...
     #(let [fd (posix.open $.path)]
        (if (. (posix.fstat fd) :is-dir)
          {: fd}))  ; ...if we do, the FD is proof (and becomes self)
@@ -73,8 +78,10 @@ This system is useful for distributed applications, but it isn't perfect: consid
 
 Now we have reliability, but at the cost of extra FDs that aren't explicitly freed unless we call `close` on them. We install a GC handler as a fallback.
 
-It's worth noting that trait objects are cached and reused: in the example above, we'd open at most one FD per distinct UNIX path object.
+It's worth noting that projected objects are cached and reused: in the example above, we'd open at most one FD per distinct UNIX path object.
+
+`trait` is the mutable version of `proj`, just as `class` is for `data`. `trait` is a metaclass that allows incremental construction of projections.
 
 
-## Trait echoes
-Because trait objects are derived and not canonical, you don't echo them. Instead, you echo the underlying object and downcast it locally.
+## Projection echoes
+Because projections are derived and not canonical, you don't typically echo them. Instead, you tend to echo the underlying object and project it locally. `proj` implementations, as immutable Lua source bundles, are portable and are shipped alongside the `data` for an object when the object is echoed.
