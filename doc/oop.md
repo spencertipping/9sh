@@ -36,6 +36,8 @@ A `class` is an object that maintains a mutable schema and creates `data` object
 
 
 ## `proj` and `trait`
+**FIXME:** interesting design, but the only reason we want any of this machinery is (1) to organize methods, and (2) to support ADL. Is that a valid reason to build it?
+
 A `proj`, short for "projection", is a collection of behavior an object can opt into, but 9sh projections are predicated on _runtime state,_ not just type information:
 
 ``` fennel
@@ -44,7 +46,7 @@ A `proj`, short for "projection", is a collection of behavior an object can opt 
 
       ;; nine.vfs.dir is a projection that is defined for
       ;; VFS entries that are directories.
-      dir (nine.vfs.dir:on obj)]  ; a VFS dir or nil
+      dir (nine.vfs.dir obj)]     ; a VFS dir or nil
 
   (if dir (do
     (ls dir))))
@@ -62,11 +64,12 @@ This system is useful for distributed applications, but it isn't perfect: consid
   (cls:defctor (fn [this path] (tset this :path path)))
 
   ;; This class may be projectable to the nine.vfs.dir projection
-  (cls:impl nine.vfs.dir
+  (nine.vfs.dir:impl [cls]
     ;; Determine whether we can be projected...
     #(let [fd (posix.open $.path)]
        (if (. (posix.fstat fd) :is-dir)
-         {: fd}))  ; ...if we do, the FD is proof (and becomes self)
+         {: fd}  ; ...if we do, the FD is proof (and becomes self)
+         (do (posix.close fd) nil)))
 
     :gc #(close $)
 
@@ -76,12 +79,6 @@ This system is useful for distributed applications, but it isn't perfect: consid
      :ls    #(posix.readdir $.fd)})
 ```
 
-Now we have reliability, but at the cost of extra FDs that aren't explicitly freed unless we call `close` on them. We install a GC handler as a fallback.
-
-It's worth noting that projected objects are cached and reused: in the example above, we'd open at most one FD per distinct UNIX path object.
+Now we have reliability, but at the cost of extra FDs that aren't explicitly freed unless we call `close` on them. We install a GC handler as a fallback. It's worth noting that projected objects are cached and reused: in the example above, we'd open at most one FD per distinct UNIX path object.
 
 `trait` is the mutable version of `proj`, just as `class` is for `data`. `trait` is a metaclass that allows incremental construction of projections.
-
-
-## Projection echoes
-Because projections are derived and not canonical, you don't typically echo them. Instead, you tend to echo the underlying object and project it locally. `proj` implementations, as immutable Lua source bundles, are portable and are shipped alongside the `data` for an object when the object is echoed.
