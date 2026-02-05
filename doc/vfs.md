@@ -157,13 +157,16 @@ The VFS is configured in `~/.9shrc`, which creates the control state for the [pe
   ;; a real file. This will _not_ be inherited by subdirectories.
   ;; You can `cat www` to fetch homepage contents.
   ;;
+  ;; POSIX processes can't see VFS entries unless you render with
+  ;; FUSE.
+  ;;
   ;; www is simultaneously a file and a directory; its interpretation
   ;; will vary by usage. It's never "real" in the POSIX sense, even
   ;; though it appears inline. If you run POSIX ls, you won't see www
   ;; because it doesn't actually exist (but if you run 9sh ls, it
   ;; will be visible).
-  (p:def :/www        (fs.net.http "https://foo.io")))
-  (p:def :/www/status (fs.net.http "https://status.foo.io"))
+  (p:def :/www        (fs.net.http "https://foo.io"))
+  (p:def :/www/status (fs.net.http "https://status.foo.io")))
 
 ;; Trust some directories by automatically evaluating their .9shrc.
 ;; These 9shrc files are evaluated each time you cd into the directory.

@@ -3,16 +3,13 @@
 
 A UNIX shell built on a semantic VFS. 9sh extends POSIX shell scripting by adding VFS-driven command and grammar overloads, distributed execution and file remoting, and interaction multiplexing.
 
-9sh borrows ideas from Plan 9, Haskell, SQL, and Smalltalk, is written as a statically-linked binary in C++ with embedded LuaJIT, and is scripted in Fennel, a Clojure-flavored Lisp for Lua, using a custom OOP framework providing metaclasses, persistence, and data locality.
-
 
 ## Core concepts
 If you're new to 9sh, you'll probably want to read these in order. The VFS underpins or influences almost everything else.
 
 + Foundation
-  + [Cylinders](doc/cylinders.md)
-  + [OOP](doc/oop.md)
-  + [VFS](doc/vfs.md)
+  + [Cylinders and echoes](doc/cylinders.md)
+  + [VFS mechanics](doc/vfs.md)
 + Commands
   + [Commands](doc/commands.md)
   + [Types and unification](doc/types.md)
