@@ -123,7 +123,7 @@ $
 
 
 ## Chained higher-order moments
-While you can write `cd //db//x`, 9sh doesn't define what this would mean and this `cd` operation will usually fail. However, `cd //db///meta` _is_ well-defined, as all VFS entries define `///` attributes. `cd ///meta///meta///meta` is also well-defined.
+While you can write `cd //db//x`, 9sh doesn't define what this would mean and this `cd` operation will usually fail (unless you've extended the VFS to define it). However, `cd //db///meta` _is_ well-defined, as all VFS entries define `///` attributes. `cd ///meta///meta///meta` is also well-defined.
 
 `///` entries are inherited through the OOP system (via trait implementation) rather than from parent directories.
 
@@ -134,7 +134,7 @@ The VFS is configured in `~/.9shrc`, which creates the control state for the [pe
 ``` fennel
 (local fs (require :nine.vfs))
 
-;; Entries defined into / are visible everywhere
+;; Second-moment entries defined into / are visible everywhere
 (fs.root:def ://db/foo (fs.db.postgres {...}))
 (fs.root:def ://db/bar (fs.db.mysql    {...}))
 
