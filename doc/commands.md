@@ -33,7 +33,7 @@ The 9sh parsing system is polymorphic along two independent axes:
 ``` sh
 $ cat foo | grep foo | bar > 10 | bif
 # AAAAAAA   BBBBBBBB   CCCCCCCC   DDD
-# AAAAAAA   EEEEEEEEEEEEEEEEEEE   DDD
+# AAAAAAA   EEEEEEEEEEEEEEEEEEE   DDD  <- AAA and DDD are reused
 #
 # 0         1         2         3
 # 01234567890123456789012345678901234
@@ -54,7 +54,7 @@ The final result contains two alternatives:
      (pipe (grep foo) (bar > 10))]}
 ```
 
-We minimize intermediate breadth by fast-forwarding lagging branches, i.e. using a priority-queue wavefront scheduler ⇒ CPS transformation ⇒ Lua coroutines.
+We minimize intermediate breadth by fast-forwarding lagging branches, i.e. using a priority-queue wavefront scheduler ⇒ CPS transformation ⇒ Lua coroutines. `(amb)`'s parse result is a typed array of alternatives.
 
 
 ## Realtime entanglements
@@ -63,7 +63,9 @@ Parse states become time-variant in two ways:
 1. Async VFS operations, which may retroactively add detail
 2. Cursor movements and edits, which may reuse parse states
 
-(2) is just a persistent scheduler and carefully-keyed memoization. (1) entangles two temporally distinct reference frames: _what could be true_ converging to _what we know to be true,_ distinct because interactive parsing (autocomplete, syntax highlighting, type hints) should not await all outstanding RPCs, whereas command execution, a side-effectful commitment, must.
+(1) entangles two temporally distinct reference frames: _what could be true_ converging to _what we know to be true,_ distinct because interactive parsing (autocomplete, syntax highlighting, type hints) should not await all outstanding RPCs, whereas command execution, a side-effectful commitment, must.
+
+(2) is just a persistent scheduler and carefully-keyed memoization. Because parse states are immutable objects, we can content-address them within a subheap, getting memoization for free.
 
 
 **TODO:** cylinders, immutable class definitions, code portability, global-variable access detection via scope analysis, Merkle tree state, weakref pub/sub, convergence + hashing
