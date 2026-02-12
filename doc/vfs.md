@@ -29,7 +29,7 @@ $ @todo list         # chat with a VFS-scoped background process
 
 In addition to resolving all commands and providing the shell grammar, the VFS also translates non-filesystem objects into the filesystem metaphor; for instance:
 
-```sh
+``` sh
 $ cat //host/*/logs | grep foo | sort | uniq -c > log-rollup
 # ---                 ----
 # |                   |
@@ -49,7 +49,7 @@ $ cat //host/*/logs | grep foo > log-rollup
 
 The same logic, plus command overloading, allows sections of the pipeline to move away from POSIX altogether; `cut` is similar to SQL `select` and `grep` is similar to `where`, yielding:
 
-```sh
+``` sh
 $ cut foo,bar //db/table | grep bar > 10 | zstd > rows.csv.zst
 # |                                    |   ----        ---
 # +- compiled to SQL ------------------+   |           |
@@ -165,8 +165,9 @@ The VFS is configured in `~/.9shrc`, which creates the control state for the [pe
   ;; though it appears inline. If you run POSIX ls, you won't see www
   ;; because it doesn't actually exist (but if you run 9sh ls, it
   ;; will be visible).
-  (p:def :/www        (fs.net.http "https://foo.io"))
-  (p:def :/www/status (fs.net.http "https://status.foo.io")))
+  (let [w (p:def :/www (fs.net.http "https://foo.io"))]
+    (w:def :/status    (fs.net.http "https://status.foo.io"))
+    (w:def :/healthz   (fs.net.http "https://foo.io/healthz"))))
 
 ;; Trust some directories by automatically evaluating their .9shrc.
 ;; These 9shrc files are evaluated each time you cd into the directory.
