@@ -3,7 +3,19 @@
 
 Direct cylinder access is strictly serialized, which is often a problem for performance. To work around this, you can create an _echo,_ which is a read-only cache of a cylinder's state within the recent past. Echoes typically have TTLs and they may implement refresh mechanics. Critically, echoes are always read-only; if you want to write, you must do so by talking to the cylinder that owns the object you're writing to. On the system-level, 9sh provides no fire-and-forget mechanics: if you didn't get an ack, then a write has not been safely committed.
 
+If an echo and cylinder-writer are colocated, the echo will typically update itself when the cylinder confirms a write. For example, `cylinder.x = 100` will cause `echo.x == 100` once the write is confirmed. This isn't guaranteed behavior -- it depends on the echo implementation -- but it's common.
+
 Intuitively, you can think of a cylinder as generalizing a heap, a garbage-collected domain, and/or a database.
+
+
+## Atomic operations
+Cylinders support versioned CAS and other related distributed atomics.
+
+**TODO:** details
+
+
+## Content-addressable storage
+**TODO**
 
 
 ## Local topology
