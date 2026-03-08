@@ -4,28 +4,25 @@ OS_NAME      := $(shell uname -s)
 # Global Settings
 CXX          := g++
 CXXFLAGS     := -std=c++23 -Os -ffunction-sections -fdata-sections -Isrc -I/usr/include/luajit-2.1
-LDFLAGS      :=
+LDFLAGS      := -Wl,--gc-sections -s
 
 # Linux Configuration
 # Linux Configuration
 ifeq ($(OS_NAME),Linux)
 CXXFLAGS     += -I/usr/local/include -I/usr/include
-LDFLAGS      += -Wl,--export-dynamic -L/usr/local/lib -L/usr/lib \
+LDFLAGS      += -Bstatic -static -L/usr/local/lib -L/usr/lib \
                 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/aarch64-linux-gnu
 
 # Use pkg-config to handle distro differences (e.g. -ltinfo on Ubuntu vs ncursesw on Alpine)
-PKG_WHOLE    := readline sqlite3 vterm
-PKG_STD      := nice glib-2.0 gthread-2.0 openssl
+PKG_WHOLE    := 
+PKG_STD      := readline sqlite3 vterm libsodium nice glib-2.0 gthread-2.0 openssl
 
 LIBS_WHOLE   := $(filter-out -lm,$(shell pkg-config --libs --static $(PKG_WHOLE)))
 LIBS_STD     := $(filter-out -lm,$(shell pkg-config --libs --static $(PKG_STD)))
 
 # Force static linking for core dependencies
-# We use -Wl,-Bstatic to force static linking for the libraries found,
-# and switch back to -Wl,-Bdynamic for system libraries (pthread, dl).
-LIBS         := -Wl,-Bstatic -Wl,--whole-archive $(LIBS_WHOLE) -Wl,--no-whole-archive \
-                $(LIBS_STD) -lbiscuit_auth -lluajit-5.1 -ldatachannel -lboost_system \
-                -Wl,-Bdynamic -lpthread -ldl -lm
+LIBS         := -Wl,-Bstatic $(LIBS_STD) -lluajit-5.1 -ldatachannel \
+                -lboost_system -lpthread -lm
 endif
 
 # MacOS Configuration
@@ -44,11 +41,11 @@ LDFLAGS      += -L$(BREW_PREFIX)/lib -L$(BREW_PREFIX)/opt/readline/lib \
 # where possible, avoiding "library not loaded" errors.
 # System libs (ncurses, pthread, dl) remain dynamic.
 LIBS         := /usr/local/lib/libluajit-5.1.a \
-                /usr/local/lib/libbiscuit_auth.a \
                 $(BREW_PREFIX)/opt/readline/lib/libreadline.a \
                 $(BREW_PREFIX)/opt/sqlite/lib/libsqlite3.a \
                 $(BREW_PREFIX)/opt/openssl@3/lib/libssl.a \
                 $(BREW_PREFIX)/opt/openssl@3/lib/libcrypto.a \
+                $(BREW_PREFIX)/opt/libsodium/lib/libsodium.a \
                 /usr/local/lib/libvterm.a \
                 -lncurses -ldatachannel -lpthread -ldl
 endif
@@ -61,7 +58,7 @@ BC_CC        := $(BC_GEN:.bc=_bc.cc)
 BC_HDRS      := $(BC_GEN:.bc=_bc.h)
 
 # C++ Sources
-SRCS         := src/main.cc src/bindings.cc src/args.cc src/lua.cc \
+SRCS         := src/main.cc src/bindings.cc src/args.cc src/lua.cc src/biscuit_auth.cc \
                 src/bindings/fs.cc src/bindings/asio.cc $(BC_CC)
 OBJS         := $(SRCS:.cc=.o)
 

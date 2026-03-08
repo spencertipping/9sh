@@ -16,8 +16,12 @@ if [ "$sys" = "Darwin" ]; then
   echo "$out" | grep -qE "\s/usr/local/Cellar"  && err=1
 
 elif [ "$sys" = "Linux" ]; then
-  out=$(ldd "$exe"); echo "$out"
-  echo "$out" | grep -qE " => /usr/local/lib"   && err=1
+  # On Linux we expect a fully static binary now
+  out=$(ldd "$exe" 2>&1 || true)
+  echo "$out"
+  
+  # "Not a valid dynamic program" (musl) or "not a dynamic executable" (glibc)
+  echo "$out" | grep -qEi "not a (valid )?dynamic" || err=1
 fi
 
 [ $err -eq 1 ] && { echo "FAIL: dynamic link detected"; exit 1; }

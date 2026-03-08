@@ -39,7 +39,8 @@ install_sys_deps()
       boost-dev boost-static                                                   \
       curl libtool automake autoconf                                           \
       glib-dev glib-static meson ncurses-static pkgconf                        \
-      zlib-static util-linux-dev util-linux-static bison
+      zlib-static util-linux-dev util-linux-static bison                       \
+      libsodium-dev libsodium-static
 
   elif [ "$dist" = "ubuntu" ] || [ "$dist" = "debian" ] || [ "$os" = "Linux" ]; then
     $su apt-get update
@@ -48,7 +49,7 @@ install_sys_deps()
       libreadline-dev libncurses-dev libsqlite3-dev libssl-dev                 \
       libboost-system-dev libglib2.0-dev libtool libtool-bin                   \
       automake autoconf pkg-config xxd                                         \
-      zlib1g-dev
+      zlib1g-dev libsodium-dev
 
     # Note: we will build libmount/libblkid from source to ensure static libs
 
@@ -57,7 +58,7 @@ install_sys_deps()
       brew update
       brew install                                                             \
         cmake ninja readline sqlite boost openssl@3 libtool                    \
-        glib libvterm libnice
+        glib libvterm libnice libsodium
 
       BREW_PREFIX=$(brew --prefix)
       echo "DEBUG: Homebrew Prefix: $BREW_PREFIX"
