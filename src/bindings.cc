@@ -1,4 +1,7 @@
 #include <boost/asio.hpp>
+extern "C" {
+#include <biscuit_auth.h>
+}
 #include <luajit-2.1/lua.hpp>
 #include <readline/history.h>
 #include <readline/readline.h>
@@ -58,6 +61,38 @@ int luaopen_bindings_native_full(lua_State* L)
   // vterm
   REG_PTR("vterm_new",              vterm_new);
   REG_PTR("vterm_free",             vterm_free);
+  REG_PTR("vterm_set_size",         vterm_set_size);
+
+  // Biscuit
+  REG_PTR("biscuit_key_pair_new",            key_pair_new);
+  REG_PTR("biscuit_key_pair_from_pem",       key_pair_from_pem);
+  REG_PTR("biscuit_key_pair_public",         key_pair_public);
+  REG_PTR("biscuit_key_pair_free",           key_pair_free);
+  REG_PTR("biscuit_public_key_from_pem",     public_key_from_pem);
+  REG_PTR("biscuit_public_key_free",         public_key_free);
+
+  REG_PTR("biscuit_builder",                 biscuit_builder);
+  REG_PTR("biscuit_builder_add_fact",        biscuit_builder_add_fact);
+  REG_PTR("biscuit_builder_add_rule",        biscuit_builder_add_rule);
+  REG_PTR("biscuit_builder_add_check",       biscuit_builder_add_check);
+  REG_PTR("biscuit_builder_build",           biscuit_builder_build);
+  REG_PTR("biscuit_builder_free",            biscuit_builder_free);
+
+  REG_PTR("biscuit_from",                    biscuit_from);
+  REG_PTR("biscuit_free",                    biscuit_free);
+
+  REG_PTR("biscuit_authorizer_builder",      authorizer_builder);
+  REG_PTR("biscuit_authorizer_builder_add_fact", authorizer_builder_add_fact);
+  REG_PTR("biscuit_authorizer_builder_add_rule", authorizer_builder_add_rule);
+  REG_PTR("biscuit_authorizer_builder_add_check", authorizer_builder_add_check);
+  REG_PTR("biscuit_authorizer_builder_add_policy", authorizer_builder_add_policy);
+  REG_PTR("biscuit_authorizer_builder_build", authorizer_builder_build);
+  REG_PTR("biscuit_authorizer_builder_free", authorizer_builder_free);
+
+  REG_PTR("biscuit_authorizer_authorize",    authorizer_authorize);
+  REG_PTR("biscuit_authorizer_free",         authorizer_free);
+
+  REG_PTR("biscuit_error_message",           error_message);
   REG_PTR("vterm_set_size",         vterm_set_size);
 
   // Asio

@@ -24,7 +24,7 @@ LIBS_STD     := $(filter-out -lm,$(shell pkg-config --libs --static $(PKG_STD)))
 # We use -Wl,-Bstatic to force static linking for the libraries found,
 # and switch back to -Wl,-Bdynamic for system libraries (pthread, dl).
 LIBS         := -Wl,-Bstatic -Wl,--whole-archive $(LIBS_WHOLE) -Wl,--no-whole-archive \
-                $(LIBS_STD) -lluajit-5.1 -ldatachannel -lboost_system \
+                $(LIBS_STD) -lbiscuit_auth -lluajit-5.1 -ldatachannel -lboost_system \
                 -Wl,-Bdynamic -lpthread -ldl -lm
 endif
 
@@ -44,6 +44,7 @@ LDFLAGS      += -L$(BREW_PREFIX)/lib -L$(BREW_PREFIX)/opt/readline/lib \
 # where possible, avoiding "library not loaded" errors.
 # System libs (ncurses, pthread, dl) remain dynamic.
 LIBS         := /usr/local/lib/libluajit-5.1.a \
+                /usr/local/lib/libbiscuit_auth.a \
                 $(BREW_PREFIX)/opt/readline/lib/libreadline.a \
                 $(BREW_PREFIX)/opt/sqlite/lib/libsqlite3.a \
                 $(BREW_PREFIX)/opt/openssl@3/lib/libssl.a \
@@ -87,6 +88,7 @@ test:        9sh
 	./9sh tests/core/fp.fnl && \
 	./9sh tests/core/stats.fnl && \
 	./9sh tests/core/oop_operators.fnl && \
+	./9sh tests/core/biscuit.fnl && \
 	make test_linking
 
 test_linking: 9sh
