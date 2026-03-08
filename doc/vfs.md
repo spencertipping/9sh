@@ -1,4 +1,8 @@
 # 9sh VFS
+
+
+
+
 The 9sh VFS overloads repeated `/` characters to access higher-order directory resolution "moments". Conventionally:
 
 + The first moment of `foo`, via `foo/bar`, contains real UNIX files
@@ -129,8 +133,6 @@ While you can write `cd //db//x`, 9sh doesn't define what this would mean and th
 
 
 ## VFS configuration
-The VFS is configured in `~/.9shrc`, which creates the control state for the [persistence structure](persistence.md). For example:
-
 ``` fennel
 (local fs (require :nine.vfs))
 
@@ -138,7 +140,7 @@ The VFS is configured in `~/.9shrc`, which creates the control state for the [pe
 (fs.root:def ://db/foo (fs.db.postgres {...}))
 (fs.root:def ://db/bar (fs.db.mysql    {...}))
 
-(fs.root:def ://host/x (fs.db.ssh-host {...}))
+(fs.root:def ://host/x (fs.ssh-host {...}))
 
 ;; Let's define a project with project-local resources. Do this
 ;; if you want to centralize its configuration.
@@ -149,7 +151,7 @@ The VFS is configured in `~/.9shrc`, which creates the control state for the [pe
 ;; and `ls` on the virtual dir will be populated from there.
 (let [p (fs.root:def ://proj/foo
                      (fs.dir "~/git/projects/foo"))]
-  (p:def ://host/foo (fs.db.ssh-host "ubuntu@foo.io"))
+  (p:def ://host/foo (fs.ssh-host "ubuntu@foo.io"))
   (p:def ://db/prod  (fs.db.sqlite "prod.db"))
   (p:def ://db/dev   (fs.db.sqlite "dev.db"))
 
@@ -173,4 +175,22 @@ The VFS is configured in `~/.9shrc`, which creates the control state for the [pe
 ;; These 9shrc files are evaluated each time you cd into the directory.
 (fs.root:def ://proj/bar (fs.dir {:trust true}))
 (fs.root:def ://proj/bif (fs.dir {:trust true}))
+```
+
+Alternatively:
+
+``` sh
+$ cd /
+$ mount psql://...          //db/foo
+$ mount mysql://...         //db/bar
+$ mount ssh://ubuntu@foo.io //host/x
+```
+
+**FIXME:** fine, but let's just end-run the problem and mount a 9sh script as a VFS:
+
+``` sh
+$ cat foo.9sh
+(local fs (require :nine.vfs))
+...
+$ mount 9://foo.9sh  # add to root VFS -- can be removed later
 ```
