@@ -10,7 +10,7 @@ LDFLAGS      := -Wl,--gc-sections -s
 # Linux Configuration
 ifeq ($(OS_NAME),Linux)
 CXXFLAGS     += -I/usr/local/include -I/usr/include
-LDFLAGS      += -Bstatic -static -L/usr/local/lib -L/usr/lib \
+LDFLAGS      += -Wl,--export-dynamic -L/usr/local/lib -L/usr/lib \
                 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/aarch64-linux-gnu
 
 # Use pkg-config to handle distro differences (e.g. -ltinfo on Ubuntu vs ncursesw on Alpine)
@@ -22,7 +22,7 @@ LIBS_STD     := $(filter-out -lm,$(shell pkg-config --libs --static $(PKG_STD)))
 
 # Force static linking for core dependencies
 LIBS         := -Wl,-Bstatic $(LIBS_STD) -lluajit-5.1 -ldatachannel \
-                -lboost_system -lpthread -lm
+                -lboost_system -Wl,-Bdynamic -lpthread -ldl -lm
 endif
 
 # MacOS Configuration

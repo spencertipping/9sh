@@ -80,6 +80,13 @@
   void authorizer_free(struct Authorizer *_authorizer);
 
   const char *error_message(void);
+
+  void *dlopen(const char *filename, int flags);
+  void *dlsym(void *handle, const char *symbol);
+  int dlclose(void *handle);
+  static const int RTLD_LAZY = 1;
+  static const int RTLD_NOW = 2;
+  static const int RTLD_GLOBAL = 256;
 ")
 
 
@@ -135,4 +142,10 @@
            :authorizer_builder_free (cast "void (*)(struct AuthorizerBuilder*)" "biscuit_authorizer_builder_free")
            :authorizer_authorize (cast "bool (*)(struct Authorizer*)" "biscuit_authorizer_authorize")
            :authorizer_free (cast "void (*)(struct Authorizer*)" "biscuit_authorizer_free")
-           :error_message (cast "const char* (*)(void)" "biscuit_error_message")}}
+           :error_message (cast "const char* (*)(void)" "biscuit_error_message")}
+ :dl {:open (cast "void* (*)(const char*, int)" "dlopen")
+      :sym (cast "void* (*)(void*, const char*)" "dlsym")
+      :close (cast "int (*)(void*)" "dlclose")
+      :RTLD_LAZY 1
+      :RTLD_NOW 2
+      :RTLD_GLOBAL 256}}

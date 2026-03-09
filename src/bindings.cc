@@ -9,6 +9,7 @@ extern "C" {
 #include <vterm.h>
 
 #include "base.h"
+#include <dlfcn.h>
 
 
 extern "C" {
@@ -101,6 +102,11 @@ int luaopen_bindings_native_full(lua_State* L)
 
   // Filesystem
   REG_PTR("is_slow_mount",          w_is_slow_mount);
+
+  // dlopen / dlfcn.h
+  REG_PTR("dlopen",                 dlopen);
+  REG_PTR("dlsym",                  dlsym);
+  REG_PTR("dlclose",                dlclose);
 
   return 1;
 }

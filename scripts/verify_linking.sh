@@ -16,12 +16,13 @@ if [ "$sys" = "Darwin" ]; then
   echo "$out" | grep -qE "\s/usr/local/Cellar"  && err=1
 
 elif [ "$sys" = "Linux" ]; then
-  # On Linux we expect a fully static binary now
+  # Due to the inclusion of `dlopen`, Linux binaries are still exported as ELF dynamic
+  # executables natively linked to the dynamic musl libc.
   out=$(ldd "$exe" 2>&1 || true)
   echo "$out"
   
-  # "Not a valid dynamic program" (musl) or "not a dynamic executable" (glibc)
-  echo "$out" | grep -qEi "not a (valid )?dynamic" || err=1
+  # Anything outside the standard Alpine runtime glibc base (libstdc++, libgcc_s, libc, ld) triggers a failure 
+  echo "$out" | grep -vE "lib(stdc\+\+|gcc_s|c)(\.musl-x86_64)?\.so" | grep -vE "^.*/lib/ld-musl-x86_64\.so" | grep -qE "=>" && err=1
 fi
 
 [ $err -eq 1 ] && { echo "FAIL: dynamic link detected"; exit 1; }
