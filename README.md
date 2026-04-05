@@ -1,66 +1,25 @@
 # 9sh
 **Under construction**
 
+9sh is a Plan 9-inspired shell built on four interconnected layers:
+
+1. An extensible VFS that provides local, remote, and virtual locations
+2. An extensible command grammar with a consistent semantic structure
+3. An extensible process-interaction, multiplexing, and routing space
+4. A distributed remote-execution mesh and [concurrency model](doc/cylinders.md)
+
+They intersect extensively, including:
+
++ All stateful objects are represented as VFS entries
++ `$PWD` within the VFS provides the interaction grammar + command resolution
+
+**TODO:** redo the above list as a visual diagram
 
 
+**NOTE:** the way to think about type inference here is that we bootstrap into HM-world with a linear command. The VFS dir doesn't strictly need to look at the first _n_ characters to resolve the command, but (1) it generally should; and (2) the command resolves other types, so we'll want to know it early -- otherwise we have a chaotic experience.
 
+**NOTE:** we can infer the type of semicolon; it's equivalent to `m a` monadic type inference. We need _some_ structure, but it's unclear how much. This relates to polymorphic pipes: it allows pipe type inference to travel through a pipeline.
 
+**NOTE:** values are not necessarily known in a distributed system; they can be in a superposition of "sent but not confirmed". Algorithms should be able to reason about that state. Arguably that state is probabilistic in nature. If we do this, we're pushing distributed-state expectations downwards into the language kernel, the antithesis of sagas (or is it?).
 
-**TODO:**
-
-Each prompt is a UX for the shell cylinder, which multiplexes onto the VFS.
-
-Some cylinders act as controllers for others. Controlled cylinders need a `controlled-by = (id, timestamp)` attribute (and to maintain it canonically) to avoid controller collisions. We should probably think about controller handoff and delegation. This doesn't strictly interact with permissions, but it might.
-
-Within a prompt time-step, **VFS nodes are echoes of cylinders.** This forces all prompt interactions to treat them read-only until you hit `<enter>`, which is the first point at which a delay is UX-permissible. So, `cd foo//bar` will block until an echo has been created for `foo//bar`. The local VFS is therefore an echo of the underlying mount structure: the VFS is a graph of _cylinder accessors → echo generators._
-
-Types and stochastic models are not directly related to cylinders. They're alternative projections from the same command objects, but we don't need an underlying cylinder to exist to create types -- unlike echoes, which are derived. The same `command` object can produce both. (Also note: `command` in the UX sense and `command` in the backend-process sense are entirely distinct concepts. Should probably give them different names.)
-
-
-
-
-## Core concepts
-If you're new to 9sh, you'll probably want to read these in order. The VFS underpins or influences almost everything else.
-
-**TODO:** rewrite/GC the list below
-
-+ Foundation
-  + [Cylinders and echoes](doc/cylinders.md)
-  + [VFS mechanics](doc/vfs.md)
-+ Commands
-  + [Commands](doc/commands.md)
-  + [Types and unification](doc/types.md)
-  + [Simulation](doc/simulation.md)
-  + [Stochastic optimization](doc/optimization.md)
-
-**Core idea:** data promises, `echo hi > foo` should track `foo`'s existence for future steps, helping the parser
-
-**Core idea:** type _recommender_, not type _verifier_
-
-
-## Unincorporated notes
-+ [Collection](doc/notes.md)
-
-+ https://librechat.k3s.priv/c/5bc16f79-90d7-4388-a75c-a72c87f9f887
-+ https://librechat.k3s.priv/c/a2fb2b38-ef4a-4396-a795-0c231818a65f
-+ https://librechat.k3s.priv/c/5f88c05b-4918-42c9-aa79-401c7e34c0f9
-+ https://librechat.k3s.priv/c/8f0e37d5-f046-40da-9981-b0f68bf00e67
-+ https://librechat.k3s.priv/c/b75fded5-edab-44c4-9281-c45670b58b97
-+ [Cylinders as objects, ad-hoc raft](https://librechat.k3s.priv/c/0d41f7f2-79a7-4fd2-98df-60b03fc5b064)
-
-
-## Examples
-**TODO**
-
-
-## Contributors
-+ [Spencer Tipping](https://github.com/spencertipping)
-+ [tvScientific](https://tvscientific.com)
-
-
-## License (GPLv3)
-Copyright (C) 2026 Spencer Tipping.
-
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+**Speculative cylinder-ordering execution:** look forwards, expanding function calls and attempting to reorder execution, e.g. by collecting RPCs and batching them.

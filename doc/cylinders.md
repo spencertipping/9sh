@@ -21,7 +21,7 @@ Cylinders support versioned CAS and other related distributed atomics.
 ## Local topology
 9sh is organized around a user-specific daemon that serves as a traffic hub and a central repository for data coming in from all shell sessions. For example, command history is stored here. This daemon has the root cylinder, `c0`, which manages the `.9sh.db` user SQLite database.
 
-Each shell session creates its own local cylinder, `c1`, to contain its VFS objects. This is important: because the underlying filesystem (which lazily populates the VFS) can block, it's critical that `c0` not issue any filesystem calls; otherwise _all_ active shell sessions could experience a denial of service. The only exception is to load and modify `.9sh.db`.
+Each shell session creates its own local cylinder, `c1`, to contain its VFS objects. This is important: because the underlying filesystem (which lazily populates the VFS) can block, it's critical that `c0` not issue any filesystem calls; otherwise _all_ active shell sessions could experience a denial of service. The only exception is to load and modify `.9sh.db`, which is done in a dedicated thread.
 
 `.9shrc` initializes `c1` within each shell session. `c0` doesn't hold session data; it holds permanent, cross-session state and proxies to communicate between sessions.
 
