@@ -10,10 +10,29 @@
 
 They intersect extensively, including:
 
-+ All stateful objects are represented as VFS entries
-+ `$PWD` within the VFS provides the interaction grammar + command resolution
+```
++ Shell state is fully VFS-encoded within the // moment
+  + Routers/multiplexers
+  + Running processes (within the @ moment)
+  + Distributed peers
+  + Cylinders and echoes
+  + Available commands
+  + Command grammars
++ $PWD within the VFS drives the UX
+  + Command resolution
+  + Grammar elements
+  + Visual presentation
+  + Plurality + statistical optimization, like command grammars?
+  + This is implemented using the // and /// moments
++ Remote instances populate VFS entries
+  + Remote peers are VFS lenses
+```
 
 **TODO:** redo the above list as a visual diagram
+
+**Q:** how do VFS-UX and multiplexing relate to one another? We probably have UX levels, and/or a UX grammar similar to how commands re-delegate their sub-grammars to `$PWD`. Could be OOP overrides: override the top level or a sub-level maybe. I like the principle that we configure UX panes by pointing them at specific coordinates.
+
+**NOTE:** we need a principled boundary between "UX as data" (commands) and "UX as presentation" (layout). Shouldn't be too hard to do.
 
 
 **NOTE:** the way to think about type inference here is that we bootstrap into HM-world with a linear command. The VFS dir doesn't strictly need to look at the first _n_ characters to resolve the command, but (1) it generally should; and (2) the command resolves other types, so we'll want to know it early -- otherwise we have a chaotic experience.
