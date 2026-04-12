@@ -1,19 +1,69 @@
 # 9sh
 **Under construction**
 
-9sh is a Plan 9-inspired shell built on four interconnected layers:
+POSIX sh manages three state spaces:
+
++ Local files
++ Local processes
++ Session-scoped variables
+
+
+9sh is a Plan 9-inspired, mostly POSIX-compliant UNIX shell built on four interconnected layers:
 
 1. An extensible VFS that provides local, remote, and virtual locations
-2. An extensible command grammar with a consistent semantic structure
+2. An extensible command grammar with Hindley-Milner type inference
 3. An extensible process-interaction, multiplexing, and routing space
 4. A distributed remote-execution mesh and [concurrency model](doc/cylinders.md)
 
-They intersect extensively, including:
+This architecture allows 9sh to use POSIX-adjacent syntax to represent a wide variety of different local and distributed operations; for example:
+
+``` sh
+$ cat file | grep foo | zstd > matches  # normal command
+
+$ cat //host/*/data \
+    | grep foo \
+    | zstd > //host/*/matches  # distributed parallel
+
+$ cat //host/*//db/foo | grep bar > 10 \
+    | cut -f foo,bar \
+    | sort -k bar:asc \
+    | zstd > rows.csv.zst  # distributed database
+```
+
+9sh also provides custom grammars for data processing, and you can easily define your own in Lua, Fennel, or 9sh script.
+
+See [doc/commands.md](doc/commands.md) for more specifics about command-execution machinery, but you might want to read the VFS overview below first.
+
+
+## VFS
+The VFS unifies the UNIX data plane, the 9sh data plane, and the 9sh control plane as three distinct moments of directory access:
+
++ `foo/bar`: `bar` within the first moment of `foo` (the data plane)
++ `foo//bar`: `bar` within the second moment of `foo` (the 9sh user-data plane)
++ `foo///bar`: `bar` within the third moment of `foo` (the 9sh control plane)
+
+Moments 2 and 3 are rootless and relative to `$PWD`, and there are several shorthands:
+
++ `//foo` → `.//foo`, and `///foo` → `.///foo` -- the `.` is implied, since `//` and `///` are not roots
++ `@foo` → `///proc/foo`
++ `~foo` → `///home/foo`
++ `foo://bar/bif` → `///scheme/foo/bar/bif`
+
+The second moment is inherited from parent directories: `foo/bar//bif` will be a superset of `foo//bif`. `///` inherits from its parent-directory prototype.
+
+VFS directories resolve commands: `foo` → `///cmd/foo`, if `///cmd/foo` exists. `///cmd` is the union of `$PATH`-specified directories, plus any user-defined commands that may exist within this path.
+
+VFS directories also resolve shell grammar components, e.g. `///parse/foo`, which allows user-extensible grammar overrides.
+
+See [doc/vfs.md](doc/vfs.md) for more specifics.
+
+
 
 ```
-+ Shell state is fully VFS-encoded within the // moment
++ Shell state is fully VFS-encoded within the /// moment
   + Routers/multiplexers
   + Running processes (within the @ moment)
+  + Routing topology
   + Distributed peers
   + Cylinders and echoes
   + Available commands
@@ -24,8 +74,10 @@ They intersect extensively, including:
   + Visual presentation
   + Plurality + statistical optimization, like command grammars?
   + This is implemented using the // and /// moments
-+ Remote instances populate VFS entries
-  + Remote peers are VFS lenses
++ Type resolution through the VFS
+  + Static VFS entries → static lookups
+  + Some VFS entries = control interfaces/sockets
+  + VFS entries can be runtime Lua objects, if colocated or proxied
 ```
 
 **TODO:** redo the above list as a visual diagram

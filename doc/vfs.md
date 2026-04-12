@@ -1,196 +1,114 @@
 # 9sh VFS
+**TODO:** un-AI-ify this document
+
+The 9sh Virtual Filesystem is the universal address space for the shell. It replaces IP addresses, connection strings, and container APIs with a unified, capability-secure hierarchy.
+
+In 9sh, the VFS does not merely expose data; it encodes **distributed state, lexical closures, and liability mechanics**. By mapping distributed systems concepts onto standard POSIX primitives, 9sh allows you to orchestrate containers, Raft consensus groups, and remote compute clusters using nothing but standard UNIX text streams.
 
 
+## Moments
+The 9sh VFS overloads repeated `/` characters to access higher-order directory resolution "moments". These moments dictate how you traverse the stacked union of environments (lexical frames) that make up your current context.
+
+*   **The First Moment (`/`): Spatial Reality.** Contains concrete data (UNIX files, database rows, pipe buffers).
+*   **The Second Moment (`//`): Lexical Scope.** Contains the active environment stack. It hosts remote mounts, virtual cylinders, and shadowed variables.
+*   **The Third Moment (`///`): Meta & Prototypes.** Contains the shell's reflection plane. It hosts type traits, capability policies, orchestrator scripts, and the unflattened environment stack.
 
 
-The 9sh VFS overloads repeated `/` characters to access higher-order directory resolution "moments". Conventionally:
-
-+ The first moment of `foo`, via `foo/bar`, contains real UNIX files
-+ The second moment of `foo`, via `foo//bar` (or `//bar` if PWD is `foo`), contains assembled virtuals
-+ The third moment of `foo`, via `foo///bar` (of `///bar` if PWD is `foo`), contains self-meta
-+ Higher moments exist but aren't typically used and aren't standardized
-
-`/` always refers to the UNIX root and `~[user]` always refers to UNIX home directories (as in POSIX shell), however `~` is overloaded with suffixes, e.g. `~@`, to refer to the CWD of non-user processes and other VFS-anchored objects: if `@foo` is a background process, `cd ~@foo` navigates into the CWD of that process.
-
-A quick rule of thumb:
-
-+ The first moment reflects UNIX filesystem reality (or a transformation)
-+ The second moment inherits from parent _directories_
-+ The third moment inherits from parent _classes_
-
-Although VFS entries can modify these behaviors to deviate from the standard convention, they usually don't.
+### Traversal and the Spatial Ceiling
+Because moments are literal dimensions, traversal is strictly bounded to prevent sandbox escapes:
+*   `cd ..` (Spatial Parent): Moves up the physical directory tree. If you are inside a containerized Anchor, `cd ..` from `/` is a no-op. You hit the spatial ceiling.
+*   `cd //..` (Lexical Parent): Pops the top environment frame off your lexical stack, returning your context to the parent Anchor.
+*   `cd ///..` (Prototype Parent): Steps up the OOP inheritance tree to inspect fallback parsers and commands.
 
 
-## Quick overview
-The VFS allows you to create a semantic superstructure over your filesystem. VFS nodes are more than files and directories: they also function as namespace scopes, i.e. you `import` them (or `cd` into them) to acquire access to resources. For example:
+## Reference frames and `~`
+In 9sh, directory navigation (`cd`) moves the **Observer** (the user), while AST evaluation moves the **Actor** (the command).
 
-``` sh
-$ cd //projects/foo  # VFS directory
-$ @todo list         # chat with a VFS-scoped background process
-@todo: 1. foo        # stdout tagged with sender
-@todo: 2. bar
-```
+If you `cd` into an Anchor backed by a Docker container, your interactive shell remains on the host, but the compilation context for your next command is set to the container. To bridge these realities seamlessly, 9sh reserves a specific set of tilde (`~`) coordinates:
 
-In addition to resolving all commands and providing the shell grammar, the VFS also translates non-filesystem objects into the filesystem metaphor; for instance:
+*   **`/` (The Observer's Root):** The physical root of the machine running your interactive shell.
+*   **`~@/` (The Actor's Root):** The physical root of the execution environment (e.g., the container's `/` or the remote host's `/`).
+*   **`~0/` (The Current Anchor):** The root of your current logical project.
+*   **`~1/` (The Parent Anchor):** The root of the project one level down the lexical stack.
+*   **`~9/` (The Ambient Root):** The absolute bottom of your stack. It holds your global distributed identity, `@jobs`, and aliases.
 
-``` sh
-$ cat //host/*/logs | grep foo | sort | uniq -c > log-rollup
-# ---                 ----
-# |                   |
-# +-------------------+- moved to data for performance since sort
-#                        reorders the input data
-```
+**Example: Cross-Reality Operations**
+Because these coordinates are resolved at compile-time, you can perform complex cross-boundary operations in a single line.
+```sh
+# You are inside a containerized microservice Anchor.
+$ cd //src/monorepo/backend/auth_service
 
-A Haskell-style type system applies these operations only when valid. If you run a command with an end-to-end serial dependency, the jobs won't be parallelized, matching POSIX semantics (except that `grep` may still be moved to save bandwidth):
-
-``` sh
-$ cat //host/*/logs | grep foo > log-rollup
-# ---                 ----
-# |                   |
-# +-------------------+- moved to data but serially, since order
-#                        is specified by *
-```
-
-The same logic, plus command overloading, allows sections of the pipeline to move away from POSIX altogether; `cut` is similar to SQL `select` and `grep` is similar to `where`, yielding:
-
-``` sh
-$ cut foo,bar //db/table | grep bar > 10 | zstd > rows.csv.zst
-# |                                    |   ----        ---
-# +- compiled to SQL ------------------+   |           |
-#                                          |           |
-#                zstd consumes csv text ---+-----------+
-```
-
-This case is particularly interesting because the `.csv.zst` file extension provides a CSV type hint that propagates across `| zstd >` to inform the export type from the database query.
-
-You can `cd` into any of these locations: `cd //db; cut foo,bar table` works, and `cd //host/*` works as well, landing you in a multi-homed virtual directory targeting all hosts at once. The files visible to you are the union of the files on remotes, their sizes, modtimes, UIDs, and other attributes are reported as distributions rather than scalars, and any noninteractive command you run will execute on all hosts simultaneously, e.g. `uptime > uptime.log` will create `uptime.log` on every host. This execution behavior, as with most other implicit context, is determined by the VFS PWD.
-
-
-## Navigation mechanics
-``` sh
-$ cd       # pwd = ~
-$ ls       # entries of the first moment of $PWD
-$ ls //    # entries of the second moment of $PWD
-$ ls ///   # entries of the third moment of $PWD
-$ cd //x   # cd into 'x' within the second moment of $PWD
-$ cd .//y  # identical to cd //y -- we are now in ~//x//y
-```
-
-At this point we're in `~//x//y`, which is to say "`y` within the second moment of `x` within the second moment of the home directory". You don't typically have multiple second-moment navigations in succession, but you can. From there:
-
-``` sh
-$ cd ..         # pwd = ~//x
-$ cd ///z       # pwd = ~//x///z
-$ cd ..         # pwd = ~//x
-$ cd ..         # pwd = ~
-$ cd ///a       # pwd = ~///a
-$ cd /bin       # pwd = /bin
-$ cd //b/c///d  # pwd = /bin//b/c///d
-$ cd /          # pwd = /
-$ cd //foo      # pwd = /.//foo
+# Copy the container's internal Nginx log to the host's parent monorepo
+$ cp ~@/var/log/nginx/access.log ~1/shared_logs/
 ```
 
 
-## Virtuals and inheritance
-9sh uses the second-moment `//` notation as a shorthand to access _virtual_ objects that have no logical filesystem location, e.g. remote hosts, databases, S3 locations, and so forth. Because virtuals don't canonically reside within the UNIX filesystem, they're accessible independently of location. However, VFS nodes act as _scope containers_ and therefore define `//` entries in a top-down way:
+## Cylinders, echoes, and liability
+In 9sh, data is not just a stream of bytes; it is a flow of **liability**.
 
-``` sh
-$ cd ~/projects/foo
-$ ls //hosts         # global hosts + hosts local to the foo project root
-$ cd src/main        # subdirectories of projects/foo
-$ ls //hosts         # hosts in this subdir inherited from parent(s)
+*   **Cylinders (Owners):** A Cylinder is any VFS node that accepts liability for data (e.g., a local disk, a Postgres database, a Raft cluster). Cylinders are the *only* entities permitted to execute non-idempotent side effects.
+*   **Echoes (Projections):** An Echo is a read-only, non-authoritative cache of a Cylinder. You can pipe out of an Echo, but you cannot pipe into it.
+*   **Pipes (Conduits):** A pipe (`|`) is a Liability Transfer Proposal. Because networks partition, pipes are volatile. The 9sh compiler mandates that all commands within a pipe must be mathematically `Pure` or `Idempotent`.
+
+
+### Linear Types and the Auto-ACK Fabric
+To transfer data destructively between Cylinders, you append `:consume` to the source path. This wraps the data in a Linear Type (`#`), enforcing the **Law of Conservation of Liability**. The data cannot be duplicated or dropped; it must be absorbed by a robust Sink.
+
+```sh
+$ tail -f //raft-a/topic:consume | awk '{print $2}' > //raft-b/topic
 ```
 
-In other words, the second moment conventionally inherits second-moment entries from parents, unioning (and sometimes shadowing) them together to form the most contextually-specific view. This allows `//` to act as a second logical root, just one whose contents are modified by where you're accessing it.
+Because POSIX pipes are lossy, 9sh does not attempt to inject magic watermarks into the byte stream. Instead, the compiler synthesizes a **Garbage Collection (ACK) loop** in the background.
+
+1. `//raft-a` emits data but does not delete it.
+2. `awk` transforms the data.
+3. `//raft-b` absorbs the data and emits the safely committed Row IDs to its `///receipts` endpoint.
+4. 9sh automatically routes those IDs back to `//raft-a///ack`, which deletes the original records.
+
+This provides exactly-once, Kafka-level streaming semantics using standard UNIX text-processing tools.
 
 
-## Self-meta
-The third moment is typically used to inspect objects: `///types/foo` might contain the definition of a custom type specific to this directory + descendants, however the `///` namespace is not itself inherited:
+## Entanglement and `&`
+9sh models distributed execution via **Entanglement Mechanics**. Your interactive terminal (`~9`) is a highly unreliable reference frame (laptops go to sleep, Wi-Fi drops).
 
-``` sh
-$ ls //db      # list custom databases
-prod  dev
-$ ls ///types  # custom type defined here
-foo
-$
+The `&` operator, traditionally used to background a process, is overloaded in 9sh to mean **Decoherence**. It instructs the compiler to dissociate the execution from your `~9` reference frame entirely.
+
+**Subjective Execution (Synchronous):**
+```sh
+$ tail -f //db/prod:consume > //db/warehouse
+```
+The data plane and the Auto-ACK control plane are routed through your laptop. If you close your laptop, the pipe breaks safely. No data is lost, but the transfer halts.
+
+**Objective Execution (Decohered):**
+```sh
+$ tail -f //db/prod:consume > //db/warehouse &
+[1] @migration_job_7f
+```
+The compiler observes that the Source and Sink are both robust Cylinders. Because of the `&`, it packages the pipeline and submits it to the Spacetime Mesh (`///mesh`). The transfer runs directly between the databases.
+
+You can close your laptop, throw it in the ocean, and buy a new one. Upon restoring your `~9` Ambient Root, you can re-entangle the observation plane using standard job control:
+```sh
+$ fg @migration_job_7f
+```
+The switching fabric will dynamically rewire the remote job's `stdout` and `stderr` back to your new terminal.
+
+
+## 5. Security and sandboxing
+9sh abandons User-ID (UID) based security for within-session execution, replacing it with **Lexical VFS Projections**.
+
+When a command is executed, it does not see the entire hard drive. It only sees the specific Moments (`//`) explicitly projected into its sandbox by the AST Linker.
+
+
+### Anchor Orchestrators
+Security is bolted on via the `///cmd` prototype chain. If an Anchor is configured to use a container, the default orchestrator wraps all executions in that namespace.
+
+```fennel
+;; //project/foo///cmd/default/exec
+(fn [ast plan]
+  (os.execute (string.format "podman run -v %s:%s --rm my_image %s"
+                             (vfs.pwd) (vfs.pwd) ast.raw)))
 ```
 
-Note the difference between the second and third moments within a subdirectory:
 
-``` sh
-$ cd src       # move to a subdirectory
-$ ls //db      # custom databases are inherited by default
-prod  dev
-$ ls ///types  # no custom types defined here
-$
-```
-
-
-## Chained higher-order moments
-While you can write `cd //db//x`, 9sh doesn't define what this would mean and this `cd` operation will usually fail (unless you've extended the VFS to define it). However, `cd //db///meta` _is_ well-defined, as all VFS entries define `///` attributes. `cd ///meta///meta///meta` is also well-defined.
-
-`///` entries are inherited through the OOP system (via trait implementation) rather than from parent directories.
-
-
-## VFS configuration
-``` fennel
-(local fs (require :nine.vfs))
-
-;; Second-moment entries defined into / are visible everywhere
-(fs.root:def ://db/foo (fs.db.postgres {...}))
-(fs.root:def ://db/bar (fs.db.mysql    {...}))
-
-(fs.root:def ://host/x (fs.ssh-host {...}))
-
-;; Let's define a project with project-local resources. Do this
-;; if you want to centralize its configuration.
-;;
-;; We also specify the backing location for the directory. When
-;; you run POSIX commands from this virtual directory, they'll
-;; have CWD set to ~/git/projects/foo in the UNIX filesystem --
-;; and `ls` on the virtual dir will be populated from there.
-(let [p (fs.root:def ://proj/foo
-                     (fs.dir "~/git/projects/foo"))]
-  (p:def ://host/foo (fs.ssh-host "ubuntu@foo.io"))
-  (p:def ://db/prod  (fs.db.sqlite "prod.db"))
-  (p:def ://db/dev   (fs.db.sqlite "dev.db"))
-
-  ;; Insert a VFS entry into the first moment, as though it were
-  ;; a real file. This will _not_ be inherited by subdirectories.
-  ;; You can `cat www` to fetch homepage contents.
-  ;;
-  ;; POSIX processes can't see VFS entries unless you render with
-  ;; FUSE.
-  ;;
-  ;; www is simultaneously a file and a directory; its interpretation
-  ;; will vary by usage. It's never "real" in the POSIX sense, even
-  ;; though it appears inline. If you run POSIX ls, you won't see www
-  ;; because it doesn't actually exist (but if you run 9sh ls, it
-  ;; will be visible).
-  (let [w (p:def :/www (fs.net.http "https://foo.io"))]
-    (w:def :/status    (fs.net.http "https://status.foo.io"))
-    (w:def :/healthz   (fs.net.http "https://foo.io/healthz"))))
-
-;; Trust some directories by automatically evaluating their .9shrc.
-;; These 9shrc files are evaluated each time you cd into the directory.
-(fs.root:def ://proj/bar (fs.dir {:trust true}))
-(fs.root:def ://proj/bif (fs.dir {:trust true}))
-```
-
-Alternatively:
-
-``` sh
-$ cd /
-$ mount psql://...          //db/foo
-$ mount mysql://...         //db/bar
-$ mount ssh://ubuntu@foo.io //host/x
-```
-
-**FIXME:** fine, but let's just end-run the problem and mount a 9sh script as a VFS:
-
-``` sh
-$ cat foo.9sh
-(local fs (require :nine.vfs))
-...
-$ mount 9://foo.9sh  # add to root VFS -- can be removed later
-```
+### Command Exemptions
+Commands can be exempted from the container by delegating to the `super` prototype. If `git` is exempted, typing `git commit` inside the containerized Anchor will fall through the prototype chain and execute on the host OS, utilizing the host's `ssh-agent` and filesystem, while `npm install` remains safely isolated in the container.

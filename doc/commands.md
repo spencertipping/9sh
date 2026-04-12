@@ -1,5 +1,5 @@
 # 9sh commands
-`ls /usr/bin` and `ls //db` are both called `ls`, but they have different grammars and are executed differently. This requires 9sh to support not just command polymorphism but also _parse polymorphism,_ both governed by the PWD. This is nontrivially complex because polymorphic grammars can modify the parse points. You could imagine, for example:
+`ls /usr/bin` and `ls //db` are both called `ls`, but they have different grammars and are executed differently. This requires 9sh to support not just command polymorphism but also _parse polymorphism,_ both governed by `$PWD`. Note that polymorphic grammars can modify the parse points, producing divergent alternatives. You could imagine, for example:
 
 ``` sh
 $ cat file | grep foo | bar > 10 | zstd > file.zst
@@ -16,7 +16,7 @@ $ @py x | y                     # probably not a shell pipe
 @py: 30
 $ @py x | wc -c                 # probably a shell pipe
 @py: 3
-$ @gemini Explain `ls | wc -l`  # not a shell pipe
+$ @gemini Explain `ls | wc -l`  # definitely not a shell pipe
 @gemini: ...
 $
 ```
@@ -42,7 +42,7 @@ $ cat foo | grep foo | bar > 10 | bif
 The parse state after `cat foo | ` is `{10: [(cat foo)]}`. Since `grep` is ambiguous, we have two continuations that are parsed like this:
 
 ```
-grep foo | bar > 10 → {32 [(grep foo (> bar 10))]}
+grep foo | bar > 10 → {32 [(grep (> (bit-or foo bar) 10))]}
 grep foo            → {21 [(grep foo)]}
          | bar > 10 → {32 [(pipe (grep foo) (bar > 10))]}
 ```
@@ -50,7 +50,7 @@ grep foo            → {21 [(grep foo)]}
 The final result contains two alternatives:
 
 ```
-{32 [(grep foo (> bar 10))
+{32 [(grep (> (bit-or foo bar) 10))
      (pipe (grep foo) (bar > 10))]}
 ```
 
