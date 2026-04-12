@@ -1,79 +1,99 @@
-# 9sh commands
-`ls /usr/bin` and `ls //db` are both called `ls`, but they have different grammars and are executed differently. This requires 9sh to support not just command polymorphism but also _parse polymorphism,_ both governed by `$PWD`. Note that polymorphic grammars can modify the parse points, producing divergent alternatives. You could imagine, for example:
+# 9sh Commands & Execution
 
-``` sh
-$ cat file | grep foo | bar > 10 | zstd > file.zst
-#          |---------------------| <- parse 1: | is infix or
-#          |----------|----------| <- parse 2: | is pipe
+**TODO:** un-AI-ify this
+
+In standard UNIX, a command is an imperative instruction: *"Do this exactly here."*
+In 9sh, a command is a **Type Declaration**: *"I require a reality that looks like this."*
+
+9sh completely inverts the traditional shell paradigm. It abandons brittle query planners, hardcoded distributed orchestrators, and complex cluster-management flags. Instead, 9sh relies on the Curry-Howard correspondence (the principle that types are propositions and programs are proofs).
+
+In 9sh, **the command line is the type signature.** The execution engine is simply a type unifier that discovers the optimal physical reality required to satisfy your signature.
+
+We conceptualize this using two terms: **The Shadow** and **The Structure**.
+*   **The Shadow:** The text you type into the prompt. It is a 2D projection of your intent—an underspecified type signature full of free variables (holes).
+*   **The Structure:** The fully concrete, multi-dimensional execution plan. It specifies exact physical nodes, thread counts, and network sockets.
+
+The 9sh compiler pipeline is a four-stage process that parses the Shadow, generates all mathematically valid Structures that could cast it, and executes the cheapest one.
+
+
+## 1. Parsing: SPPF and The Shadow
+Because `$PWD` dictates the grammar via its `///parser` prototype, 9sh supports extreme syntactic polymorphism. A Lisp-flavored Anchor might parse `(| (ls) (wc 'l))` while a standard Anchor parses `ls | wc -l`.
+
+To accommodate length-variant ambiguity without blocking the interactive prompt, 9sh parses input into a **Shared-Prefix Parse Forest (SPPF)**.
+
+```sh
+$ cat //db/logs | grep ERROR
 ```
 
-It might seem unreasonable for commands to overload `|`, but the flexibility improves interactive systems:
+The parser's job is not to figure out *how* to execute this. Its only job is to translate the SPPF into the **Shadow**—an AST where physical execution details are left as free variables (`?`):
 
-``` sh
-$ @py x = 10
-$ @py y = 20
-$ @py x | y                     # probably not a shell pipe
-@py: 30
-$ @py x | wc -c                 # probably a shell pipe
-@py: 3
-$ @gemini Explain `ls | wc -l`  # definitely not a shell pipe
-@gemini: ...
-$
+```text
+Pipe(
+  exec(where = //db, what = cat(logs)),
+  exec(where = ?,    what = grep(ERROR))
+)
 ```
 
+Because `//db/logs` is physically anchored, its `where` is implicitly concrete. But `grep` is a pure function, so the parser leaves its `where` up for grabs.
 
-## Parse structure
-The 9sh parsing system is polymorphic along two independent axes:
 
-1. Interactive vs offline-script parse cursors
-2. `(amb)` to fork the parse continuation
+## 2. Unification: Casting the Structure
+The 9sh core engine knows absolutely nothing about SQL, Map/Reduce, or Docker. It is simply a **Type Unifier**. It takes the Shadow and attempts to fill in the `?` holes by querying the VFS Traits (`///traits`) of the commands involved.
 
-`(amb)` is nuanced. We accommodate length-variant ambiguity tractably with offset-keyed shared-prefix parse forests (SPPF); for example:
+For the `grep` example above, the Unifier queries `grep` and sees it implements `Trait.Pure`. This means its location is unconstrained. The Unifier generates two valid **Structures** (concrete types):
 
-``` sh
-$ cat foo | grep foo | bar > 10 | bif
-# AAAAAAA   BBBBBBBB   CCCCCCCC   DDD
-# AAAAAAA   EEEEEEEEEEEEEEEEEEE   DDD  <- AAA and DDD are reused
-#
-# 0         1         2         3
-# 01234567890123456789012345678901234
+*   **Structure A (Standard POSIX):** `?where = ~9`. The pipe bridges `//db` to your laptop (`~9`). A massive network transfer happens *before* `grep`.
+*   **Structure B (SQL Pushdown):** `?where = //db`. The pipe bridges `//db` to `~9` *after* `grep`. The network transfer is tiny.
+
+### Implicit Combinators and Map/Reduce
+If a type fails to unify directly, 9sh searches the environment for an Implicit Combinator to bridge the gap.
+
+If you type `$ g++ *.c` across 50 files, the Unifier sees a mismatch: `g++` expects a single file, but it was handed a `List`. It searches `///traits` and finds `Trait.ScatterGather`. It proposes a new Structure:
+
+```text
+parallel(
+  how_many = 5,
+  where = [node1, node2, node3, node4, node5],
+  what = g++(*.c)
+)
 ```
+By simply unifying types, 9sh discovers distributed build farms and Map/Reduce topologies for free.
 
-The parse state after `cat foo | ` is `{10: [(cat foo)]}`. Since `grep` is ambiguous, we have two continuations that are parsed like this:
+### Explicit Typing (Manual Override)
+If you want to bypass the Unifier, you simply provide a more concrete Shadow using the Trait Coercion Operator (`:`).
 
+```sh
+$ grep:~9 ERROR
 ```
-grep foo | bar > 10 → {32 [(grep (> (bit-or foo bar) 10))]}
-grep foo            → {21 [(grep foo)]}
-         | bar > 10 → {32 [(pipe (grep foo) (bar > 10))]}
-```
-
-The final result contains two alternatives:
-
-```
-{32 [(grep (> (bit-or foo bar) 10))
-     (pipe (grep foo) (bar > 10))]}
-```
-
-We minimize intermediate breadth by fast-forwarding lagging branches, i.e. using a priority-queue wavefront scheduler ⇒ CPS transformation ⇒ Lua coroutines. `(amb)`'s parse result is a typed array of alternatives.
+By explicitly pinning the type to `~9` (Local), the Shadow *is* the Structure. There is zero ambiguity, and 9sh executes it exactly like standard `bash`. User intent is just type annotation.
 
 
-## Realtime entanglements
-Parse states become time-variant in two ways:
+## 3. Optimization as Disambiguation (The QMC Solver)
+When the Unifier generates multiple valid Structures that cast the exact same Shadow, how does 9sh choose?
 
-1. Async VFS operations, which may retroactively add detail
-2. Cursor movements and edits, which may reuse parse states
+**Optimization is simply the algorithm we use to disambiguate underspecified pipeline types.**
 
-(1) entangles two temporally distinct reference frames: _what could be true_ converging to _what we know to be true,_ distinct because interactive parsing (autocomplete, syntax highlighting, type hints) should not await all outstanding RPCs, whereas command execution, a side-effectful commitment, must.
+9sh resolves ambiguity using a **Quasi-Monte Carlo (QMC) Stochastic Solver**.
+Every VFS node and command maintains a lightweight, 2KB statistical sketch of its historical execution in the `///profile` moment (e.g., "grep usually filters 90% of data," "this disk has a 1% failure rate").
 
-(2) is just a persistent scheduler and carefully-keyed memoization. Because parse states are immutable objects, we can content-address them within a subheap, getting memoization for free.
+The QMC Solver takes the valid Structures and runs a rapid Monte Carlo simulation over these samplers to minimize the user's **Cost Function**.
+
+*   If your Cost Function is `Time`, the Solver picks the Structure that parallelizes compute across the Spacetime Mesh.
+*   If your Cost Function is `AWS_Egress_Fees`, the Solver picks the Structure that pushes all filtering to the remote Cylinder.
+
+If the QMC Solver times out (e.g., after 50ms), or if the math is too complex, 9sh safely degrades to the first valid Structure it found (usually local POSIX execution). It never hangs; it just degrades gracefully.
 
 
-**TODO:** cylinders, immutable class definitions, code portability, global-variable access detection via scope analysis, Merkle tree state, weakref pub/sub, convergence + hashing
+## 4. Execution and Online Iteration (MPC)
+Once a Structure is chosen, the 9sh microkernel mechanically translates it into physical axioms: spawning namespaces, opening WebRTC datachannels, and wiring file descriptors.
 
-Merkle-hashed convergent state → content-addressed timeline reconciliation, i.e. automatic if we memoize.
+But distributed systems are volatile. What happens if a node's CPU spikes 10 minutes into a heavy analytics job?
 
-**Q:** why specifically do we need CAS? Prob for transfer-diff optimization within cylinder echoes; also, to force DAG in case that's useful.
+Because 9sh treats pipelines as constrained optimization problems, it executes them using **Model Predictive Control (MPC)**. The `c0` daemon continuously monitors the throughput of the switching fabric. If reality deviates from the QMC Solver's expected model by a defined threshold, 9sh initiates a **Replumb**:
 
-Objects relate to time via metaclasses, e.g. immutable, convergent, divergent, echo-leased. Those metaclasses track state on each instance.
+1.  The MPC loop sends a `SIGSTOP` to the bottlenecked pipe.
+2.  Because of the VFS Auto-ACK liability fabric, no data is lost; it simply buffers at the Source Cylinder.
+3.  The Unifier and QMC Solver run again, discovering that a different node in the mesh is now idle.
+4.  9sh spins up the actor on the new node, rewires the WebRTC datachannels, and resumes the flow of bytes.
 
-**TODO:** VFS remoting == echo.
+The user never sees a blip. The data never drops. You achieve Kubernetes-level pod-eviction and Kafka-level consumer rebalancing using nothing but POSIX pipes and pure type theory.
