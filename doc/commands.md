@@ -16,6 +16,31 @@ We conceptualize this using two terms: **The Shadow** and **The Structure**.
 The 9sh compiler pipeline is a four-stage process that parses the Shadow, generates all mathematically valid Structures that could cast it, and executes the cheapest one.
 
 
+## Entanglement and `&`
+9sh models distributed execution via **Entanglement Mechanics**. Your interactive terminal (`~9`) is a highly unreliable reference frame (laptops go to sleep, Wi-Fi drops).
+
+The `&` operator, traditionally used to background a process, is overloaded in 9sh to mean **Decoherence**. It instructs the compiler to dissociate the execution from your `~9` reference frame entirely.
+
+**Subjective Execution (Synchronous):**
+```sh
+$ tail -f //db/prod:consume > //db/warehouse
+```
+The data plane and the Auto-ACK control plane are routed through your laptop. If you close your laptop, the pipe breaks safely. No data is lost, but the transfer halts.
+
+**Objective Execution (Decohered):**
+```sh
+$ tail -f //db/prod:consume > //db/warehouse &
+[1] @migration_job_7f
+```
+The compiler observes that the Source and Sink are both robust Cylinders. Because of the `&`, it packages the pipeline and submits it to the Spacetime Mesh (`///mesh`). The transfer runs directly between the databases.
+
+You can close your laptop, throw it in the ocean, and buy a new one. Upon restoring your `~9` Ambient Root, you can re-entangle the observation plane using standard job control:
+```sh
+$ fg @migration_job_7f
+```
+The switching fabric will dynamically rewire the remote job's `stdout` and `stderr` back to your new terminal.
+
+
 ## 1. Parsing: SPPF and The Shadow
 Because `$PWD` dictates the grammar via its `///parser` prototype, 9sh supports extreme syntactic polymorphism. A Lisp-flavored Anchor might parse `(| (ls) (wc 'l))` while a standard Anchor parses `ls | wc -l`.
 
