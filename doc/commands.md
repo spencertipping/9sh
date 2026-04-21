@@ -1,4 +1,15 @@
-# 9sh Commands & Execution
+# 9sh commands
+
+
+
+
+
+
+
+
+
+
+
 
 **TODO:** un-AI-ify this
 

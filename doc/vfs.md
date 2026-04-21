@@ -1,4 +1,38 @@
 # 9sh VFS
+9sh extends the UNIX filesystem by adding two higher-order _moments:_
+
++ `foo/bar`: `bar` within the first moment of `foo` (the data plane: standard resolution)
++ `foo//bar`: `bar` within the second moment of `foo` (the user plane: a lexically-scoped collection of entries)
++ `foo///bar`: `bar` within the third moment of `foo` (the control plane: the 9sh environment that generates the other two moments)
+
+Higher-order moments are rootless, so `//foo` refers to `.//foo` (and `///foo` is `.///foo`). Each moment also defines its own `..`, so `..`, `//..`, and `///..` are usually distinct VFS locations.
+
+```
+///0               << ///0                    << ///0
+///1                + ///1                     + ///1
+///2                + ///2                     + ///2
+///cmd              + ///cmd                   + ///cmd
+///env              + ///env                   + ///env
+///home             + ///home                  + ///home
+///parser           + ///parser                + ///parser
+///scope/0 -> /./// + ///scope/0 -> /usr///    + ///scope/0
+|                     ///scope/1 -> /.///        ///scope/1
+|                     |                          ///scope/2
+|                     |                          |
+/                     /usr                       /usr/bin
+```
+
+
+## `///` entries
+**TODO**
+
+
+## Reference frames and `~`
+
+
+
+
+
 **TODO:** un-AI-ify this document
 
 The 9sh Virtual Filesystem is the universal address space for the shell. It replaces IP addresses, connection strings, and container APIs with a unified, capability-secure hierarchy.
