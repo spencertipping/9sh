@@ -8,19 +8,43 @@
 Higher-order moments are rootless, so `//foo` refers to `.//foo` (and `///foo` is `.///foo`). Each moment also defines its own `..`, so `..`, `//..`, and `///..` are usually distinct VFS locations.
 
 ```
-///0               << ///0                    << ///0
-///1                + ///1                     + ///1
-///2                + ///2                     + ///2
-///cmd              + ///cmd                   + ///cmd
-///env              + ///env                   + ///env
-///home             + ///home                  + ///home
-///parser           + ///parser                + ///parser
-///scope/0 -> /./// + ///scope/0 -> /usr///    + ///scope/0
-|                     ///scope/1 -> /.///        ///scope/1
-|                     |                          ///scope/2
-|                     |                          |
-/                     /usr                       /usr/bin
+///0              « ///0                   « ///0
+///1              + ///1                   + ///1
+///2              + ///2                   + ///2
+///cmd            + ///cmd                 + ///cmd
+///env            + ///env                 + ///env
+///home           + ///home                + ///home
+///lex/0 -> /.//  + ///lex/0 -> /.//       + ///lex/0 -> /.//
+///psr            + ///psr                 + ///psr
+///stk/0 -> /./// + ///stk/0 -> /usr///    + ///stk/0
+|                   ///stk/1 -> /.///        ///stk/1
+|                   |                        ///stk/2
+|                   |                        |
+/                   /usr                     /usr/bin
 ```
+
+
+## Original summary
+**TODO:** maybe use this section?
+
+The VFS unifies the UNIX data plane, the 9sh data plane, and the 9sh control plane as three distinct _moments_ of directory access, overloading `/`:
+
++ `foo/bar`: `bar` within the first moment of `foo` (the data plane)
++ `foo//bar`: `bar` within the second moment of `foo` (the 9sh user-data plane)
++ `foo///bar`: `bar` within the third moment of `foo` (the 9sh control plane)
+
+Moments 2 and 3 are rootless and relative to `$PWD`, and there are several shorthands:
+
++ `//foo` → `.//foo`, and `///foo` → `.///foo` -- the `.` is implied, since `//` and `///` are not roots
++ `@foo` → `///proc/foo`
++ `~foo` → `///home/foo`
++ `foo://bar/bif` → `///scheme/foo/bar/bif`
+
+The second moment is inherited from parent directories: `foo/bar//bif` will be a superset of `foo//bif`. `///` inherits from its parent-directory prototype.
+
+VFS directories resolve commands: `foo` → `///cmd/foo`, if `///cmd/foo` exists. `///cmd` is the union of `$PATH`-specified directories, plus any user-defined commands that may exist within this path.
+
+VFS directories also resolve shell grammar components, e.g. `///parse/foo`, which allows user-extensible grammar overrides.
 
 
 ## `///` entries

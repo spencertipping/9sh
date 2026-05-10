@@ -1,9 +1,7 @@
 # 9sh commands
+Bash treats commands as instructions. 9sh treats them as constraints. 9sh's core thesis is that you don't want to control reality in detail, you want to confine reality to specific domains of outcomes. Therefore, `ls | wc -l > output` dictates that `output` will contain the number of non-hidden files, but neither `ls` nor `wc -l` necessarily needs to be run to do it.
 
-
-
-
-
+Structurally, a 9sh command is a behavioral signature that 9sh refers to as a _shadow_; it then derives a _structure_ which casts that shadow and minimizes a VFS-defined cost function. You can direct-drive the structure using overrides like the `$` prefix, which drops you directly into a POSIX environment; but 9sh commands will generally achieve the same effect at least as efficiently.
 
 
 
@@ -12,19 +10,6 @@
 
 
 **TODO:** un-AI-ify this
-
-In standard UNIX, a command is an imperative instruction: *"Do this exactly here."*
-In 9sh, a command is a **Type Declaration**: *"I require a reality that looks like this."*
-
-9sh completely inverts the traditional shell paradigm. It abandons brittle query planners, hardcoded distributed orchestrators, and complex cluster-management flags. Instead, 9sh relies on the Curry-Howard correspondence (the principle that types are propositions and programs are proofs).
-
-In 9sh, **the command line is the type signature.** The execution engine is simply a type unifier that discovers the optimal physical reality required to satisfy your signature.
-
-We conceptualize this using two terms: **The Shadow** and **The Structure**.
-*   **The Shadow:** The text you type into the prompt. It is a 2D projection of your intent—an underspecified type signature full of free variables (holes).
-*   **The Structure:** The fully concrete, multi-dimensional execution plan. It specifies exact physical nodes, thread counts, and network sockets.
-
-The 9sh compiler pipeline is a four-stage process that parses the Shadow, generates all mathematically valid Structures that could cast it, and executes the cheapest one.
 
 
 ## Entanglement and `&`

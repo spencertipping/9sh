@@ -8,16 +8,6 @@ If an echo and cylinder-writer are colocated, the echo will typically update its
 Intuitively, you can think of a cylinder as generalizing a heap, a garbage-collected domain, and/or a database.
 
 
-## Atomic operations
-Cylinders support versioned CAS and other related distributed atomics.
-
-**TODO:** details
-
-
-## Content-addressable storage
-**TODO**
-
-
 ## Local topology
 9sh is organized around a user-specific daemon that serves as a traffic hub and a central repository for data coming in from all shell sessions. For example, command history is stored here. This daemon has the root cylinder, `c0`, which manages the `.9sh.db` user SQLite database.
 
