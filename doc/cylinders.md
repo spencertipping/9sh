@@ -1,7 +1,7 @@
 # 9sh cylinders
 9sh is a distributed system, which means that unified time is only partially ordered. A _cylinder,_ named for the database symbol in technical diagrams, is any area in which readers and writers agree about a total ordering -- i.e. reads and writes are fully serialized. All canonical state is owned by a cylinder.
 
-Direct cylinder access is strictly serialized, which is often a problem for performance. To work around this, you can create an _echo,_ which is a read-only cache of a cylinder's state within the recent past. Echoes typically have TTLs and they may implement refresh mechanics. Critically, echoes are always read-only; if you want to write, you must do so by talking to the cylinder that owns the object you're writing to. On the system-level, 9sh provides no fire-and-forget mechanics: if you didn't get an ack, then a write has not been safely committed.
+Direct cylinder access is strictly serialized, which is often a problem for performance. To work around this, you can create an _echo,_ which is a read-only cache of a cylinder's state within the recent past. Echoes typically have TTLs and they may implement refresh mechanics. Critically, echoes are always read-only; if you want to write, you must do so by talking to the cylinder that owns the object you're writing to. On the system-level, 9sh provides no fire-and-forget mechanics: if you didn't get an ack, then a write has not been safely committed (although you're free to implement fire-and-forget as an abstraction if you like to live dangerously).
 
 If an echo and cylinder-writer are colocated, the echo will typically update itself when the cylinder confirms a write. For example, `cylinder.x = 100` will cause `echo.x == 100` once the write is confirmed. This isn't guaranteed behavior -- it depends on the echo implementation -- but it's common, especially for echoes backing the VFS.
 
@@ -41,3 +41,6 @@ Cylinders communicate with one another using proxy objects. `c0` acts as a hub/d
 ```
 
 Proxy objects may construct echoes of their remote cylinders, or they may use the data channel directly. Beyond data-channel integrity, the proxy objects are responsible for authentication and authorization.
+
+
+## Interaction

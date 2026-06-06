@@ -1,8 +1,8 @@
 # 9sh
-POSIX defines operational physics and a user interface for local computation. `9sh` operates from `sh`'s vantage point to provide unprivileged, subjective distributed orchestration with an extensible UX that scales accordingly. Specifically:
+POSIX defines operational physics and a user interface for local computation. `9sh` operates from `sh`'s vantage point to provide unprivileged, subjective distributed orchestration. Specifically:
 
 1. 9sh preserves POSIX semantics in-place in almost all cases
-2. 9sh physics govern a subjective distributed fabric, not just the local machine
+2. 9sh physics govern a subjective distributed fabric _through and beyond_ the local machine
 3. The 9sh interface provides comprehensive overloading and consistency
 
 This architecture allows 9sh to use POSIX-adjacent syntax to represent a wide variety of different local and distributed operations; for example:
@@ -22,6 +22,8 @@ $ cat //host/*//db/foo | grep bar > 10 \
 Note that `>` changes meaning within `grep` in the last example; this is an example of type-informed parse polymorphism, a core feature of 9sh's grammar and optimizer.
 
 
+
+**TODO:** define the layout of `///` in detail
 
 
 **TODO:** figure out whether these form the right basis for README-adjacent documents
