@@ -1,6 +1,4 @@
 # 9sh actors
-**FIXME:** actors and cylinders are too similar. Let's try to unify these concepts.
-
 9sh actors are [VFS](vfs.md)-scoped accessors to [cylinders](cylinders.md), generally prefixed with `@`. Actors are often processes, but they can also be pipes to other users, remote endpoints, or any other thing you might interact with.
 
 Actors live in `///act` and participate in shell grammar. As commands, each actor defines its own parse continuation:
@@ -17,6 +15,8 @@ $ rm @foo          # delete the actor
 ```
 
 **Cylinders are never public;** any public access is mediated by an actor. You can publish an actor on the P2P WebRTC mesh by linking it into an endpoint:
+
+**TODO:** split `///mesh` to differentiate between "I'm publishing" and "I'm subscribing". Claude came up with this mesh concept and it lacks nuance.
 
 ``` sh
 $ mkdir ///mesh/endpoint     # create an endpoint

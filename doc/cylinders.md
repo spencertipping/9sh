@@ -7,6 +7,18 @@ If an echo and cylinder-writer are colocated, the echo will typically update its
 
 Intuitively, you can think of a cylinder as generalizing a heap, a garbage-collected domain, and/or a database.
 
+Cylinders appear as [actors](actors.md) in a shell context.
+
+**NOTE:** the shell itself is a cylinder/actor; each VFS node has a default destination, which is the toplevel parser. If you write `@foo ...`, you're changing the route (mediated by the toplevel/default).
+
+
+## TODO: create some clarity
+The cylinder/actor divide kind of makes sense, but why don't cylinders appear anywhere in the VFS? Are cylinders themselves actors? Every actor has cylinder semantics; does every cylinder have actor semantics? If so, is there a DAG of actors-as-accessors?
+
+Arguably the real distinction is that cylinders own state directly, whereas actors talk to one another. But that seems (1) fragile, and (2) like a bad API design. We shouldn't have these DAG-forests of actors -- what would they be for, aside from permission-scoping?
+
+Let's reconsider the use cases again, in particular publication. We can do cylinder _projections_ perhaps -- but let's definitely avoid UIs on top of UIs. The underlying math must be composable and clean.
+
 
 ## Local topology
 9sh is organized around a user-specific daemon that serves as a traffic hub and a central repository for data coming in from all shell sessions. For example, command history is stored here. This daemon has the root cylinder, `c0`, which manages the `.9sh.db` user SQLite database.
@@ -41,6 +53,3 @@ Cylinders communicate with one another using proxy objects. `c0` acts as a hub/d
 ```
 
 Proxy objects may construct echoes of their remote cylinders, or they may use the data channel directly. Beyond data-channel integrity, the proxy objects are responsible for authentication and authorization.
-
-
-## Interaction
