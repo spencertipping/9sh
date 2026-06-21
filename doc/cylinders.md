@@ -11,6 +11,10 @@ Cylinders appear as [actors](actors.md) in a shell context.
 
 **NOTE:** the shell itself is a cylinder/actor; each VFS node has a default destination, which is the toplevel parser. If you write `@foo ...`, you're changing the route (mediated by the toplevel/default).
 
+**NOTE:** cylinders aren't objects, they're domains. Echoes are objects that live within cylinders. Maybe actors are as well.
+
+**NOTE:** cylinders are owners of liability.
+
 
 ## TODO: create some clarity
 The cylinder/actor divide kind of makes sense, but why don't cylinders appear anywhere in the VFS? Are cylinders themselves actors? Every actor has cylinder semantics; does every cylinder have actor semantics? If so, is there a DAG of actors-as-accessors?
