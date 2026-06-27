@@ -23,6 +23,8 @@ Higher-order moments are rootless, so `//foo` refers to `.//foo` (and `///foo` i
 /                   /usr                     /usr/bin
 ```
 
+**TODO:** what are `///0`, `///1`, and `///2`?
+
 
 ## Original summary
 **TODO:** maybe use this section?
