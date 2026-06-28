@@ -22,6 +22,12 @@ $ cat //host/*//db/foo | grep bar > 10 \
 Note that `>` changes meaning within `grep` in the last example; this is an example of type-informed parse polymorphism, a core feature of 9sh's grammar and optimizer.
 
 
+**TODO:** formalize _liability → legibility_ -- i.e. relativistic circuits of coupled causality between cylinders
+
+**TODO:** clarify that cylinders form the basis of legibility; everything is legible _to a cylinder_ and ACKs convey that legibility
+
+**NOTE:** actors convey but conserve legibility; they neither create nor destroy it.
+
 
 **TODO:** define the layout of `///` in detail
 

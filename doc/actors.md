@@ -18,6 +18,8 @@ $ rm @foo          # delete the actor
 
 **TODO:** split `///mesh` to differentiate between "I'm publishing" and "I'm subscribing". Claude came up with this mesh concept and it lacks nuance.
 
+**TODO:** this mesh-connection proposal is crap, probably just delete it. Connections should be legible peers, as in they are identified legibly (e.g. with a unique public key).
+
 ``` sh
 $ mkdir ///mesh/endpoint     # create an endpoint
 $ ln @foo ///mesh/endpoint/  # publish @foo to that endpoint
