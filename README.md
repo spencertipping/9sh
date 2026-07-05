@@ -3,6 +3,12 @@
 
 **NOTE:** mounted cylinders for `/`-scoped state, e.g. `/home/foo` is in `c0`, but `/home/foo/bar` might store its `///` state in `/home/foo/bar/.9sh.db`
 
+**FIXME:** nothing in SQLite by default; `///` prototype state should be layered into UNIX FS so it can be version-controlled easily.
+
+**NOTE:** `///` corresponds _exactly_ to a Lua table, with `///meta/get entry` and `///meta/ls`. It's worth defining `///` in detail as it's the entire substrate of types, VFS, everything.
+
+**Q:** how does `///` exist for UNIX files? That's a cylinder-owned sidecar. We may want to standardize that format so we aren't doing e.g. `\002foo/...`, which has many other problems as well. So, we have 9sh-flavored directories and UNIX ones.
+
 
 POSIX defines operational physics and a user interface for local computation. `9sh` operates from `sh`'s vantage point to provide unprivileged, subjective distributed orchestration. Specifically:
 
