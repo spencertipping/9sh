@@ -9,6 +9,10 @@
 
 **Q:** how does `///` exist for UNIX files? That's a cylinder-owned sidecar. We may want to standardize that format so we aren't doing e.g. `\002foo/...`, which has many other problems as well. So, we have 9sh-flavored directories and UNIX ones.
 
+**NOTE:** `9sh` acts as the `#!` dispatcher for executable/binary files in `///`. We probably have `#!9:lua` or `#!9:fennel`, for example. To save space, can we symlink to definitions within other files? That would be useful. Same idea for expanding a Lua table into a `///` directory -- they should be the same thing.
+
+**NOTE:** `///` design is difficult _specifically because_ we're trying to create mechanical sympathy that spans the UNIX FS and Lua tables. We should generalize our VFS nodes so they support different types of operations; I don't think we can fully generalize the semantics, but we can largely generalize the UX. (In other words, code that navigates these dirs can see "this one is a UNIX FS dir" and "this is a remote" and "this is a 9sh meta". I think that's inevitable even though it reduces transparency -- sort of like how FAT32 filesystems don't support all extended attributes, etc.)
+
 
 POSIX defines operational physics and a user interface for local computation. `9sh` operates from `sh`'s vantage point to provide unprivileged, subjective distributed orchestration. Specifically:
 
