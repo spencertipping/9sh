@@ -1,4 +1,9 @@
 # 9sh
+**TODO:** rewrite everything; this is directional but needs focus
+
+**NOTE:** mounted cylinders for `/`-scoped state, e.g. `/home/foo` is in `c0`, but `/home/foo/bar` might store its `///` state in `/home/foo/bar/.9sh.db`
+
+
 POSIX defines operational physics and a user interface for local computation. `9sh` operates from `sh`'s vantage point to provide unprivileged, subjective distributed orchestration. Specifically:
 
 1. 9sh preserves POSIX semantics in-place in almost all cases

@@ -7,7 +7,7 @@ If an echo and cylinder-writer are colocated, the echo will typically update its
 
 Intuitively, you can think of a cylinder as generalizing a heap, a garbage-collected domain, and/or a database.
 
-Cylinders appear as [actors](actors.md) in a shell context.
+**NO:** Cylinders appear as [actors](actors.md) in a shell context.
 
 **NOTE:** the shell itself is a cylinder/actor; each VFS node has a default destination, which is the toplevel parser. If you write `@foo ...`, you're changing the route (mediated by the toplevel/default).
 
