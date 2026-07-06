@@ -15,6 +15,10 @@
 
 **NOTE:** cylinders are eigenvectors of the type solver. All type unifications _interpolate_ between cylinders. This makes sense when we consider that all effects are acked by cylinders.
 
+**NOTE:** Luatable-to-VFS-dir is a stackable Lua metaclass (and an adapter, but we want a metaclass to get auto-introspection for 9sh internals)
+
++ That means `///` is a _user-defined_ namespace, not a 9sh-defined one; though there's a standard library that provides an initial implementation.
+
 
 POSIX defines operational physics and a user interface for local computation. `9sh` operates from `sh`'s vantage point to provide unprivileged, subjective distributed orchestration. Specifically:
 
