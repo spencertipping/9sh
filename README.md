@@ -13,6 +13,8 @@
 
 **NOTE:** `///` design is difficult _specifically because_ we're trying to create mechanical sympathy that spans the UNIX FS and Lua tables. We should generalize our VFS nodes so they support different types of operations; I don't think we can fully generalize the semantics, but we can largely generalize the UX. (In other words, code that navigates these dirs can see "this one is a UNIX FS dir" and "this is a remote" and "this is a 9sh meta". I think that's inevitable even though it reduces transparency -- sort of like how FAT32 filesystems don't support all extended attributes, etc.) This polymorphism is actually quite important, as it enables 9sh to map all sorts of non-FS stuff into the VFS for accessibility (and make it downstream-accessible with FUSE).
 
+**Q:** what's our general async model? UNIX FS listing is a semi-blocking operation, so we'll want coroutines or similar. We should also consider streaming APIs here since directories can be arbitrarily large.
+
 **NOTE:** cylinders are eigenvectors of the type solver. All type unifications _interpolate_ between cylinders. This makes sense when we consider that all effects are acked by cylinders.
 
 **NOTE:** Luatable-to-VFS-dir is a stackable Lua metaclass (and an adapter, but we want a metaclass to get auto-introspection for 9sh internals)
